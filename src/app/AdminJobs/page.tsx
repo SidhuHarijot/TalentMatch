@@ -59,7 +59,7 @@ const AdminJobs: React.FC = () => {
   const handleJobClick = async (job: any) => {
     setSelectedJob(job);
     try {
-      const response = await fetch(`https://resumegraderapi.onrender.com/jobs/${job.id}/resumes`);
+      const response = await fetch(`https://resumegraderapi.onrender.com/jobs/${job.job_id}/resumes`);
       const data = await response.json();
       setResumes(data.resumes);
     } catch (error) {
@@ -67,7 +67,7 @@ const AdminJobs: React.FC = () => {
     }
 
     try {
-      const response = await fetch(`https://resumegraderapi.onrender.com/jobs/${job.id}/applicants`);
+      const response = await fetch(`https://resumegraderapi.onrender.com/jobs/${job.job_id}/applicants`);
       const data = await response.json();
       setApplicants(data.applicants || []);
     } catch (error) {
@@ -94,8 +94,8 @@ const AdminJobs: React.FC = () => {
         await fetch(`https://resumegraderapi.onrender.com/jobs/${jobId}`, {
           method: 'DELETE',
         });
-        setJobs(jobs.filter(job => job.id !== jobId));
-        setFilteredJobs(filteredJobs.filter(job => job.id !== jobId));
+        setJobs(jobs.filter(job => job.job_id !== jobId));
+        setFilteredJobs(filteredJobs.filter(job => job.job_id !== jobId));
         alert('Job deleted successfully');
       } catch (error) {
         console.error('Error deleting job:', error);
@@ -111,18 +111,33 @@ const AdminJobs: React.FC = () => {
 
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Convert application_deadline to DDMMYYYY format
+    const deadlineParts = editJob.application_deadline.split('-');
+    const updatedJob = {
+      title: editJob.title,
+      company: editJob.company,
+      description: editJob.description,
+      required_skills: editJob.required_skills, // No need to split since it's already an array
+      application_deadline: `${deadlineParts[2]}${deadlineParts[1]}${deadlineParts[0]}`, // DDMMYYYY format
+      location: editJob.location,
+      salary: parseFloat(editJob.salary),
+      job_type: editJob.job_type,
+      active: editJob.active
+    };
+
     try {
-      const response = await fetch(`https://resumegraderapi.onrender.com/jobs/${editJob.id}`, {
+      const response = await fetch(`https://resumegraderapi.onrender.com/jobs/${editJob.job_id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(editJob)
+        body: JSON.stringify(updatedJob)
       });
 
       if (response.ok) {
-        setJobs(jobs.map(job => (job.id === editJob.id ? editJob : job)));
-        setFilteredJobs(filteredJobs.map(job => (job.id === editJob.id ? editJob : job)));
+        setJobs(jobs.map(job => (job.job_id === editJob.job_id ? updatedJob : job)));
+        setFilteredJobs(filteredJobs.map(job => (job.job_id === editJob.job_id ? updatedJob : job)));
         setIsEditing(false);
         alert('Job updated successfully');
       } else {
@@ -135,8 +150,8 @@ const AdminJobs: React.FC = () => {
   };
 
   const handleEditChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setEditJob({ ...editJob, [name]: value });
+    const { name, value, type, checked } = e.target;
+    setEditJob({ ...editJob, [name]: type === 'checkbox' ? checked : value });
   };
 
   if (isEditing) {
@@ -184,8 +199,10 @@ const AdminJobs: React.FC = () => {
                 type="text"
                 name="required_skills"
                 className="border border-gray-300 rounded p-3 w-full text-gray-800"
-                value={editJob.required_skills}
-                onChange={handleEditChange}
+                value={editJob.required_skills.join(', ')}
+                onChange={(e) =>
+                  setEditJob({ ...editJob, required_skills: e.target.value.split(',').map(skill => skill.trim()) })
+                }
                 required
               />
             </div>
@@ -234,6 +251,16 @@ const AdminJobs: React.FC = () => {
                 <option value="PART">Part-time</option>
                 <option value="CONTRACT">Contract</option>
               </select>
+            </div>
+            <div className="mb-6">
+              <label className="block text-gray-700 mb-2">Active</label>
+              <input
+                type="checkbox"
+                name="active"
+                className="border border-gray-300 rounded p-3"
+                checked={editJob.active}
+                onChange={handleEditChange}
+              />
             </div>
             <button
               type="submit"
@@ -303,7 +330,7 @@ const AdminJobs: React.FC = () => {
                       job_type={job.job_type}
                       description={`${job.description.substring(0, 100)}...`}
                       onEdit={() => handleEdit(job)}
-                      onDelete={() => handleDelete(job.id)}
+                      onDelete={() => handleDelete(job.job_id)}
                     />
                   </div>
                 ))

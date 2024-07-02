@@ -10,7 +10,7 @@ const PostJob: React.FC = () => {
   const [applicationDeadline, setApplicationDeadline] = useState('');
   const [location, setLocation] = useState('');
   const [salary, setSalary] = useState('');
-  const [jobType, setJobType] = useState('Full-time');
+  const [jobType, setJobType] = useState('FULL');
   const [active, setActive] = useState(true);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -20,13 +20,20 @@ const PostJob: React.FC = () => {
       return;
     }
 
+    const deadlineParts = applicationDeadline.split('-');
+    const applicationDeadlineFormatted = {
+      day: parseInt(deadlineParts[2], 10),
+      month: parseInt(deadlineParts[1], 10),
+      year: parseInt(deadlineParts[0], 10),
+    };
+
     const jobData = {
       job_id: Date.now(), // Assuming job_id is generated on the frontend
       title,
       company,
       description,
       required_skills: requiredSkills.split(',').map(skill => skill.trim()),
-      application_deadline: new Date(applicationDeadline),
+      application_deadline: applicationDeadlineFormatted,
       location,
       salary: parseFloat(salary),
       job_type: jobType,
@@ -34,7 +41,7 @@ const PostJob: React.FC = () => {
     };
 
     try {
-      const response = await fetch('/api/jobs', {
+      const response = await fetch('https://resumegraderapi.onrender.com/jobs/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -52,9 +59,11 @@ const PostJob: React.FC = () => {
         setApplicationDeadline('');
         setLocation('');
         setSalary('');
-        setJobType('Full-time');
+        setJobType('FULL');
         setActive(true);
       } else {
+        const errorData = await response.json();
+        console.error('Error posting job:', errorData);
         alert('Failed to post job');
       }
     } catch (error) {
@@ -152,10 +161,10 @@ const PostJob: React.FC = () => {
               value={jobType}
               onChange={(e) => setJobType(e.target.value)}
             >
-              <option value="Full-time">Full-time</option>
-              <option value="Part-time">Part-time</option>
-              <option value="Contract">Contract</option>
-              <option value="Unknown">Unknown</option>
+              <option value="FULL">Full-time</option>
+              <option value="PART">Part-time</option>
+              <option value="CONTRACT">Contract</option>
+              <option value="UNKNOWN">Unknown</option>
             </select>
           </div>
           <div className="mb-6 flex items-center">

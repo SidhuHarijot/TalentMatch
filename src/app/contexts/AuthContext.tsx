@@ -6,16 +6,40 @@ import { auth } from '../firebase';
 interface AuthContextProps {
   uid: string | null;
   role: string | null;
+<<<<<<< Updated upstream
   setRole: (role: string) => void;
   user: User | null;
+=======
+  setRole: (role: string | null) => void; // Add setRole to the interface
+  user: {
+    uid: string;
+    name: {
+      first_name: string;
+      last_name: string;
+    };
+    dob: {
+      day: number;
+      month: number;
+      year: number;
+    };
+    is_owner: boolean;
+    is_admin: boolean;
+    phone_number: string;
+    email: string;
+  } | null;
+>>>>>>> Stashed changes
   signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextProps>({
   uid: null,
   role: null,
+<<<<<<< Updated upstream
   setRole: () => {},
   user: null,
+=======
+  setRole: () => {}, // Provide a default noop function
+>>>>>>> Stashed changes
   signOut: async () => {},
 });
 
@@ -61,7 +85,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   return (
+<<<<<<< Updated upstream
     <AuthContext.Provider value={{ uid, role, setRole, user, signOut }}>
+=======
+    <AuthContext.Provider value={{ uid, user, role, setRole, signOut }}>
+>>>>>>> Stashed changes
       {children}
     </AuthContext.Provider>
   );

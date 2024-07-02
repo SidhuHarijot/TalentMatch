@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import JobCard from '../components/JobCard';
+import JobCard from './JobCard';
 
 interface SavedJobsPageProps {
   savedJobs: any[];

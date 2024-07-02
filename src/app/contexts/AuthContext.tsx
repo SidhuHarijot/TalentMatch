@@ -6,6 +6,7 @@ import { auth } from '../firebase';
 interface AuthContextProps {
   uid: string | null;
   role: string | null;
+  setRole: (role: string | null) => void; // Add setRole to the interface
   user: {
     uid: string;
     name: {
@@ -29,6 +30,7 @@ const AuthContext = createContext<AuthContextProps>({
   uid: null,
   user: null,
   role: null,
+  setRole: () => {}, // Provide a default noop function
   signOut: async () => {},
 });
 
@@ -89,7 +91,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   return (
-    <AuthContext.Provider value={{ uid, user, role, signOut }}>
+    <AuthContext.Provider value={{ uid, user, role, setRole, signOut }}>
       {children}
     </AuthContext.Provider>
   );

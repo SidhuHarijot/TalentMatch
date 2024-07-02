@@ -3,12 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import JobCard from '../components/JobCard';
 import Link from 'next/link';
-import { useAuth } from '../contexts/AuthContext';
 
 const AdminJobs: React.FC = () => {
-  const { role } = useAuth();
-  const isAdmin = role === 'admin';
-
   const [selectedJob, setSelectedJob] = useState<any>(null);
   const [jobTitle, setJobTitle] = useState<string>('');
   const [location, setLocation] = useState<string>('');
@@ -44,18 +40,9 @@ const AdminJobs: React.FC = () => {
     fetchJobs();
   }, []);
 
-  const formatDateForInput = (dateObject: { day: number, month: number, year: number }) => {
+  const formatDate = (dateObject: { day: number, month: number, year: number }) => {
     const { day, month, year } = dateObject;
-    return `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
-  };
-
-  const formatDateForDisplay = (dateString: string) => {
-    const dateParts = dateString.split("-");
-    return {
-      day: parseInt(dateParts[2]),
-      month: parseInt(dateParts[1]),
-      year: parseInt(dateParts[0])
-    };
+    return `${day.toString().padStart(2, '0')}-${month.toString().padStart(2, '0')}-${year}`;
   };
 
   const handleSearch = () => {
@@ -72,22 +59,15 @@ const AdminJobs: React.FC = () => {
   const handleJobClick = async (job: any) => {
     setSelectedJob(job);
     try {
-      const response = await fetch(`https://resumegraderapi.onrender.com/jobs/${job.job_id}/resumes`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch resumes');
-      }
+      const response = await fetch(`https://resumegraderapi.onrender.com/jobs/${job.id}/resumes`);
       const data = await response.json();
       setResumes(data.resumes);
     } catch (error) {
       console.error('Error fetching resumes:', error);
-      setResumes([]);
     }
 
     try {
-      const response = await fetch(`https://resumegraderapi.onrender.com/jobs/${job.job_id}/applicants`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch applicants');
-      }
+      const response = await fetch(`https://resumegraderapi.onrender.com/jobs/${job.id}/applicants`);
       const data = await response.json();
       setApplicants(data.applicants || []);
     } catch (error) {
@@ -114,8 +94,8 @@ const AdminJobs: React.FC = () => {
         await fetch(`https://resumegraderapi.onrender.com/jobs/${jobId}`, {
           method: 'DELETE',
         });
-        setJobs(jobs.filter(job => job.job_id !== jobId));
-        setFilteredJobs(filteredJobs.filter(job => job.job_id !== jobId));
+        setJobs(jobs.filter(job => job.id !== jobId));
+        setFilteredJobs(filteredJobs.filter(job => job.id !== jobId));
         alert('Job deleted successfully');
       } catch (error) {
         console.error('Error deleting job:', error);
@@ -126,39 +106,26 @@ const AdminJobs: React.FC = () => {
 
   const handleEdit = (job: any) => {
     setIsEditing(true);
-    setEditJob({
-      ...job,
-      application_deadline: formatDateForInput(job.application_deadline),
-      required_skills: Array.isArray(job.required_skills) ? job.required_skills.join(', ') : job.required_skills
-    });
+    setEditJob(job);
   };
 
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    const updatedJob = {
-      ...editJob,
-      required_skills: editJob.required_skills.split(',').map((skill: string) => skill.trim()),
-      application_deadline: formatDateForDisplay(editJob.application_deadline)
-    };
-
     try {
-      const response = await fetch(`https://resumegraderapi.onrender.com/jobs/${editJob.job_id}`, {
+      const response = await fetch(`https://resumegraderapi.onrender.com/jobs/${editJob.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(updatedJob)
+        body: JSON.stringify(editJob)
       });
 
       if (response.ok) {
-        setJobs(jobs.map(job => (job.job_id === editJob.job_id ? updatedJob : job)));
-        setFilteredJobs(filteredJobs.map(job => (job.job_id === editJob.job_id ? updatedJob : job)));
+        setJobs(jobs.map(job => (job.id === editJob.id ? editJob : job)));
+        setFilteredJobs(filteredJobs.map(job => (job.id === editJob.id ? editJob : job)));
         setIsEditing(false);
         alert('Job updated successfully');
       } else {
-        const errorData = await response.json();
-        console.error('Failed to update job:', errorData);
         alert('Failed to update job');
       }
     } catch (error) {
@@ -327,7 +294,7 @@ const AdminJobs: React.FC = () => {
             <div className="w-2/5 p-4">
               {currentJobs.length > 0 ? (
                 currentJobs.map((job, index) => (
-                  <div key={index} className="mb-4">
+                  <div key={index} className="mb-4" onClick={() => handleJobClick(job)}>
                     <JobCard
                       title={job.title}
                       company={job.company}
@@ -335,24 +302,9 @@ const AdminJobs: React.FC = () => {
                       salary={job.salary}
                       job_type={job.job_type}
                       description={`${job.description.substring(0, 100)}...`}
-                      onClick={() => handleJobClick(job)}
+                      onEdit={() => handleEdit(job)}
+                      onDelete={() => handleDelete(job.id)}
                     />
-                    {isAdmin && (
-                      <div className="flex justify-between mt-2">
-                        <button
-                          onClick={() => handleEdit(job)}
-                          className="bg-yellow-500 text-white rounded px-4 py-2"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleDelete(job.job_id)}
-                          className="bg-red-500 text-white rounded px-4 py-2"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    )}
                   </div>
                 ))
               ) : (
@@ -391,7 +343,7 @@ const AdminJobs: React.FC = () => {
                     <strong>Required Skills:</strong> {selectedJob.required_skills.join(', ')}
                   </p>
                   <p className="text-gray-700 mb-2">
-                    <strong>Application Deadline:</strong> {formatDateForInput(selectedJob.application_deadline)}
+                    <strong>Application Deadline:</strong> {formatDate(selectedJob.application_deadline)}
                   </p>
                   <p className="text-gray-700 mb-4">{selectedJob.details ? selectedJob.details : selectedJob.description}</p>
                   <div className="mt-6">

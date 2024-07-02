@@ -63,7 +63,7 @@ const PostJob: React.FC = () => {
   };
 
   return (
-    <main className="flex flex-col items-center p-6 bg-gradient-to-r from-indigo-100 via-blue-200 to-indigo-300 min-h-screen">
+    <main className="flex flex-col items-center p-6 bg-gradient-to-r from-indigo-300 via-purple-200 to-pink-300 min-h-screen">
       <div className="w-full max-w-2xl bg-white shadow-lg rounded-lg p-8">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-4xl font-bold text-gray-800">Post a New Job</h1>

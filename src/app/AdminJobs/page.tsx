@@ -4,6 +4,13 @@ import React, { useState, useEffect } from 'react';
 import JobCard from '../components/JobCard';
 import Link from 'next/link';
 
+const jobTypeMapping: Record<string, string> = {
+  FULL: 'Full-Time',
+  PART: 'Part-Time',
+  CONT: 'Contract',
+  UNKN: 'Unknown',
+};
+
 const AdminJobs: React.FC = () => {
   const [selectedJob, setSelectedJob] = useState<any>(null);
   const [jobTitle, setJobTitle] = useState<string>('');
@@ -128,7 +135,7 @@ const AdminJobs: React.FC = () => {
       active: editJob.active
     };
 
-    console.log('Updated Job:', updatedJob); // Debugging line
+    console.log('Updated Job:', updatedJob);
 
     try {
       const response = await fetch(`https://resumegraderapi.onrender.com/jobs/${editJob.job_id}`, {
@@ -256,8 +263,8 @@ const AdminJobs: React.FC = () => {
                 value={editJob.job_type}
                 onChange={handleEditChange}
               >
-                <option value="FULL">Full-time</option>
-                <option value="PART">Part-time</option>
+                <option value="FULL">Full-Time</option>
+                <option value="PART">Part-Time</option>
                 <option value="CONT">Contract</option>
                 <option value="UNKN">Unknown</option>
               </select>
@@ -290,7 +297,7 @@ const AdminJobs: React.FC = () => {
         <div className="flex justify-between items-center mb-4">
           <h1 className="text-4xl font-bold text-gray-800">Job Listings</h1>
           <Link href="/PostJobs">
-            <span className="bg-gradient-to-tr from-blue-400 via-blue-200 to-blue-500 text-black text-2xl font-bold rounded px-6 py-3 cursor-pointer w-1/3 text-center">
+            <span className="bg-gradient bg-blue-400 text-xl font-bold rounded px-6 py-3 cursor-pointer w-1/3 text-center">
               Add New Job Postings 
             </span>
           </Link>
@@ -337,7 +344,7 @@ const AdminJobs: React.FC = () => {
                       company={job.company}
                       location={job.location}
                       salary={job.salary}
-                      job_type={job.job_type}
+                      job_type={jobTypeMapping[job.job_type]}
                       description={`${job.description.substring(0, 100)}...`}
                       onEdit={() => handleEdit(job)}
                       onDelete={() => handleDelete(job.job_id)}
@@ -374,7 +381,7 @@ const AdminJobs: React.FC = () => {
                     <strong>Salary:</strong> {selectedJob.salary}
                   </p>
                   <p className="text-gray-700 mb-2">
-                    <strong>Type:</strong> {selectedJob.job_type ? selectedJob.job_type : 'N/A'}
+                    <strong>Type:</strong> {jobTypeMapping[selectedJob.job_type]}
                   </p>
                   <p className="text-gray-700 mb-2">
                     <strong>Required Skills:</strong> {selectedJob.required_skills.join(', ')}

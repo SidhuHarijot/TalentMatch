@@ -40,7 +40,10 @@ const AdminJobs: React.FC = () => {
     fetchJobs();
   }, []);
 
-  const formatDate = (dateObject: { day: number, month: number, year: number }) => {
+  const formatDate = (dateObject: { day: number, month: number, year: number } | null) => {
+    if (!dateObject) {
+      return '01-01-1970'; // Default date in case dateObject is null or undefined
+    }
     const { day, month, year } = dateObject;
     return `${day.toString().padStart(2, '0')}-${month.toString().padStart(2, '0')}-${year}`;
   };
@@ -112,19 +115,20 @@ const AdminJobs: React.FC = () => {
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Convert application_deadline to DDMMYYYY format
     const deadlineParts = editJob.application_deadline.split('-');
     const updatedJob = {
       title: editJob.title,
       company: editJob.company,
       description: editJob.description,
-      required_skills: editJob.required_skills, // No need to split since it's already an array
-      application_deadline: `${deadlineParts[2]}${deadlineParts[1]}${deadlineParts[0]}`, // DDMMYYYY format
+      required_skills: editJob.required_skills,
+      application_deadline: `${deadlineParts[2]}${deadlineParts[1]}${deadlineParts[0]}`,
       location: editJob.location,
       salary: parseFloat(editJob.salary),
       job_type: editJob.job_type,
       active: editJob.active
     };
+
+    console.log('Updated Job:', updatedJob); // Debugging line
 
     try {
       const response = await fetch(`https://resumegraderapi.onrender.com/jobs/${editJob.job_id}`, {
@@ -136,11 +140,15 @@ const AdminJobs: React.FC = () => {
       });
 
       if (response.ok) {
-        setJobs(jobs.map(job => (job.job_id === editJob.job_id ? updatedJob : job)));
-        setFilteredJobs(filteredJobs.map(job => (job.job_id === editJob.job_id ? updatedJob : job)));
+        const updatedJobResponse = await response.json();
+        setJobs(jobs.map(job => (job.job_id === editJob.job_id ? updatedJobResponse : job)));
+        setFilteredJobs(filteredJobs.map(job => (job.job_id === editJob.job_id ? updatedJobResponse : job)));
         setIsEditing(false);
+        setSelectedJob(updatedJobResponse); // Update the selected job details
         alert('Job updated successfully');
       } else {
+        const errorResponse = await response.json();
+        console.error('Failed to update job:', errorResponse); // Debugging line
         alert('Failed to update job');
       }
     } catch (error) {
@@ -150,8 +158,9 @@ const AdminJobs: React.FC = () => {
   };
 
   const handleEditChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value, type, checked } = e.target;
-    setEditJob({ ...editJob, [name]: type === 'checkbox' ? checked : value });
+    const { name, value, type } = e.target;
+    const checked = type === 'checkbox' ? (e.target as HTMLInputElement).checked : undefined;
+    setEditJob({ ...editJob, [name]: checked !== undefined ? checked : value });
   };
 
   if (isEditing) {
@@ -249,11 +258,12 @@ const AdminJobs: React.FC = () => {
               >
                 <option value="FULL">Full-time</option>
                 <option value="PART">Part-time</option>
-                <option value="CONTRACT">Contract</option>
+                <option value="CONT">Contract</option>
+                <option value="UNKN">Unknown</option>
               </select>
             </div>
-            <div className="mb-6">
-              <label className="block text-gray-700 mb-2">Active</label>
+            <div className="mb-6 flex items-center">
+              <label className="block text-gray-700 font-semibold mr-4">Active</label>
               <input
                 type="checkbox"
                 name="active"

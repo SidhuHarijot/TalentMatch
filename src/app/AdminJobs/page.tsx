@@ -106,6 +106,7 @@ const AdminJobs: React.FC = () => {
         });
         setJobs(jobs.filter(job => job.job_id !== jobId));
         setFilteredJobs(filteredJobs.filter(job => job.job_id !== jobId));
+        setSelectedJob(null); // Reset selected job
         alert('Job deleted successfully');
       } catch (error) {
         console.error('Error deleting job:', error);

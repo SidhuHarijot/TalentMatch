@@ -1,17 +1,49 @@
 // src/app/Components/ApplicationPage.tsx
-import React, { useState } from 'react';
+"use client";
+import React, { useState, useEffect } from 'react';
 import SubmissionPage from './SubmissionPage';
+import Link from 'next/link';
+import { useAuth } from '../contexts/AuthContext';
 
 interface ApplicationPageProps {
   job: any;
   goBack: () => void;
   navigateToProfile: () => void;
+  //uid: string;
 }
 
 const ApplicationPage: React.FC<ApplicationPageProps> = ({ job, goBack, navigateToProfile }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [resume, setResume] = useState("User_QA_Technician.pdf");
+  const [resume, setResume] = useState("");
   const [coverLetter, setCoverLetter] = useState("");
+  const [resumeTitle, setResumeTitle] = useState(""); 
+  const { uid } = useAuth();
+  
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch(`https://resumegraderapi.onrender.com/resumes/${uid}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        const data = await response.json();
+        if (data.experience && data.experience.length > 0) {
+          setResumeTitle(data.experience[0].title); // Set the title of the first experience
+        }
+        // You can set other data here as needed
+      } catch (error) {
+        console.error("Error fetching resume data:", error);
+      }
+    };
+
+    fetchData();
+  }, [uid]); 
+
+  const handleEditClick = () => {
+    // Navigate to UserProfile page
+  };
 
   const handleSubmitClick = () => {
     setIsSubmitting(true);
@@ -57,16 +89,10 @@ const ApplicationPage: React.FC<ApplicationPageProps> = ({ job, goBack, navigate
           <div className="w-2/5 p-4">
             <div className="mb-6">
               <h2 className="text-lg font-bold text-gray-800 mb-4">Your Resume:</h2>
-              <label className="block border border-gray-300 rounded p-4 text-center cursor-pointer hover:bg-gray-200">
-                <input
-                  type="file"
-                  accept=".pdf, .doc, .docx"
-                  className="hidden"
-                  onChange={handleResumeUpload}
-                />
-                <span className="text-gray-500">{resume ? resume : "Click to upload"}</span>
-              </label>
-              {resume && <button className="text-red-500 mt-2" onClick={() => setResume("")}>Remove</button>}
+              <div className="border border-gray-300 rounded p-4 text-center">
+                <span className="text-gray-500">{resumeTitle ? resumeTitle : "No resume uploaded"}</span>
+              </div>
+              {resumeTitle && <Link href="/UserProfile" className="text-blue-500 mt-2">Edit</Link>}
             </div>
             <div className="mb-6">
               <h2 className="text-lg font-bold text-gray-800 mb-4">Cover Letter</h2>

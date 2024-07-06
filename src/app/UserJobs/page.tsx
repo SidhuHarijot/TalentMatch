@@ -70,8 +70,9 @@ const Jobs: React.FC<{}> = () => {
   };
 
   const handleSaveJob = (job: any) => {
-    if (!savedJobs.some(savedJob => savedJob.id === job.id)) {
+    if (!savedJobs.some(savedJob => savedJob.job_id === job.job_id)) {
       setSavedJobs([...savedJobs, job]);
+      window.alert(`You have saved the job: ${job.title}`);
     }
   };
 

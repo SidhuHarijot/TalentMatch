@@ -93,6 +93,44 @@ const UserProfile: React.FC = () => {
     }
   };
 
+  const handleUpdateUserInfo = async () => {
+    const [year, month, day] = dateOfBirth.split('-').map(num => parseInt(num));
+
+    const userInfo = {
+      uid: uid,
+      first_name: firstName,
+      last_name: lastName,
+      dob: {
+        day: day,
+        month: month,
+        year: year,
+      },
+      phone_number: phoneNumber,
+      email: email,
+    };
+  
+    try {
+      const response = await fetch(`https://resumegraderapi.onrender.com/users/`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(userInfo),
+      });
+      console.log('userInfo:', userInfo);
+  
+      if (response.ok) {
+        alert('User info updated successfully.');
+      } else {
+        console.error('Error updating user info:', response.statusText);
+        alert('Failed to update user info.');
+      }
+    } catch (error) {
+      console.error('Error updating user info:', error);
+      alert('Failed to update user info.');
+    }
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, setResume: React.Dispatch<React.SetStateAction<File | null>>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
@@ -324,7 +362,7 @@ const UserProfile: React.FC = () => {
             type="text"
             className="border border-gray-300 rounded p-2 w-full text-black"
             value={phoneNumber}
-            onChange={(e) => setLastName(e.target.value)}
+            onChange={(e) => setPhoneNumber(e.target.value)}
           />
         </div>
         <div>
@@ -333,7 +371,7 @@ const UserProfile: React.FC = () => {
             type="text"
             className="border border-gray-300 rounded p-2 w-full text-black"
             value={dateOfBirth}
-            onChange={(e) => setLastName(e.target.value)}
+            onChange={(e) => setDateOfBirth(e.target.value)}
           />
         </div>
         <div className="col-span-2">
@@ -345,6 +383,7 @@ const UserProfile: React.FC = () => {
             onChange={(e) => setEmail(e.target.value)}
           />
         </div>
+        <button className="bg-green-500 text-white rounded px-4 py-2 w-28" onClick={() => handleUpdateUserInfo()}>Update</button>
         <div className="col-span-2">
           <label className="block text-gray-700 font-bold mb-2">Upload Resume:</label>
           <label className="block border border-gray-300 rounded p-4 text-center cursor-pointer hover:bg-gray-200">

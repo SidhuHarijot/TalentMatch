@@ -240,7 +240,7 @@ const UserProfile: React.FC = () => {
     };
     
     try {
-      const response = await fetch(`https://resumegraderapi.onrender.com/resumes/${uid}`, {
+      const response = await fetch(`https://resumegraderapi.onrender.com/resumes/`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

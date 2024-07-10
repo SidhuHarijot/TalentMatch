@@ -105,6 +105,21 @@ const Jobs: React.FC<{}> = () => {
     setApplyingJob(null);
   };
 
+  const getJobTypeFullName = (type: string) => {
+    switch (type) {
+      case 'FULL':
+        return 'Full-time';
+      case 'PART':
+        return 'Part-time';
+      case 'CONT':
+        return 'Contract';
+      case 'UNKN':
+        return 'Unknown';
+      default:
+        return 'Unknown';
+    }
+  };
+
   if (applyingJob) {
     return <ApplicationPage job={applyingJob} goBack={handleGoBack} navigateToProfile={() => {}} />;
   }
@@ -151,6 +166,7 @@ const Jobs: React.FC<{}> = () => {
             <option value="FULL">Full-time</option>
             <option value="PART">Part-time</option>
             <option value="CONTRACT">Contract</option>
+            <option value="UNKN">Unknown</option>
           </select>
           <button
             onClick={handleSearch}
@@ -189,7 +205,7 @@ const Jobs: React.FC<{}> = () => {
                       company={job.company}
                       location={job.location}
                       salary={job.salary}
-                      job_type={job.job_type}
+                      job_type={getJobTypeFullName(job.job_type)}
                       description={`${job.description.substring(0, 100)}...`}
                     />
                     <button
@@ -232,7 +248,10 @@ const Jobs: React.FC<{}> = () => {
                     <strong>Salary:</strong> {selectedJob.salary}
                   </p>
                   <p className="text-gray-700 mb-2">
-                    <strong>Type:</strong> {selectedJob.job_type}
+                    <strong>Type:</strong> {getJobTypeFullName(selectedJob.job_type)}
+                  </p>
+                  <p className="text-gray-700 mb-2">
+                    <strong>Required Skills:</strong> {selectedJob.required_skills.join(', ')}
                   </p>
                   <p className="text-gray-700 mb-2">
                     <strong>Description:</strong> {selectedJob.description}

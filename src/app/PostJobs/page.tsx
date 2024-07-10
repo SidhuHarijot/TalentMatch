@@ -1,6 +1,7 @@
 "use client";
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { useAuth } from '../contexts/AuthContext';
 
 const ErrorModal: React.FC<{ errors: string[], onClose: () => void }> = ({ errors, onClose }) => {
   return (
@@ -36,6 +37,7 @@ const PostJob: React.FC = () => {
   const [active, setActive] = useState(true);
   const [errors, setErrors] = useState<string[]>([]);
   const [jobId, setJobId] = useState<number | null>(null);
+  const { uid } = useAuth();
 
   const validateForm = () => {
     const newErrors: string[] = [];
@@ -68,7 +70,7 @@ const PostJob: React.FC = () => {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          job_description_text: ""
+          auth_uid: uid
         })
       });
 
@@ -91,7 +93,8 @@ const PostJob: React.FC = () => {
           location: location || "",
           salary: salary ? parseFloat(salary) : 0,
           job_type: jobType,
-          active
+          active: active,
+          auth_uid: uid
         };
 
         // PUT request to update the job with full details

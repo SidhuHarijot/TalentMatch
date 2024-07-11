@@ -74,7 +74,7 @@ const YourApplications: React.FC = () => {
         </div>
         {selectedJob && (
           <div className="mt-6 p-4 bg-gray-100 rounded-lg">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">Job Details</h2>
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">Job Details{userAgent.</h2>
             <p className="text-black"><strong>Title:</strong> {selectedJob.title}</p>
             <p className="text-black"><strong>Company:</strong> {selectedJob.company}</p>
             <p className="text-black"><strong>Status:</strong> {selectedJob.status}</p>

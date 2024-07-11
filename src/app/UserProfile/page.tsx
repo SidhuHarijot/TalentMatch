@@ -96,15 +96,14 @@ const UserProfile: React.FC = () => {
   const handleUpdateUserInfo = async () => {
     const [year, month, day] = dateOfBirth.split('-').map(num => parseInt(num));
 
+    const formattedDOB = `${day.toString().padStart(2, '0')}${month.toString().padStart(2, '0')}${year}`;
+
+
     const userInfo = {
       uid: uid,
       first_name: firstName,
       last_name: lastName,
-      dob: {
-        day: day,
-        month: month,
-        year: year,
-      },
+      dob: formattedDOB,
       phone_number: phoneNumber,
       email: email,
     };

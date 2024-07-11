@@ -17,6 +17,7 @@ const ApplicationPage: React.FC<ApplicationPageProps> = ({ job, goBack, navigate
   const [resume, setResume] = useState("");
   const [coverLetter, setCoverLetter] = useState("");
   const [resumeTitle, setResumeTitle] = useState(""); 
+  const [skills, setSkills] = useState([]);
   const { uid } = useAuth();
   
   useEffect(() => {
@@ -29,10 +30,13 @@ const ApplicationPage: React.FC<ApplicationPageProps> = ({ job, goBack, navigate
           },
         });
         const data = await response.json();
+        console.log("Resume data:", data); // For debugging
         if (data.experience && data.experience.length > 0) {
           setResumeTitle(data.experience[0].title); // Set the title of the first experience
         }
-        // You can set other data here as needed
+        if (data.skills && data.skills.length > 0) {
+          setSkills(data.skills);
+        }
       } catch (error) {
         console.error("Error fetching resume data:", error);
       }
@@ -41,23 +45,48 @@ const ApplicationPage: React.FC<ApplicationPageProps> = ({ job, goBack, navigate
     fetchData();
   }, [uid]); 
 
-  const handleEditClick = () => {
-    // Navigate to UserProfile page
-  };
+  // const handleEditClick = () => {
+  //   // Navigate to UserProfile page
+  // };
 
-  const handleSubmitClick = () => {
-    setIsSubmitting(true);
+  const handleSubmitClick = async () => {
+    setIsSubmitting(true); 
+  
+    const postData = {
+      uid: uid, 
+      job_id: job.job_id,
+      selected_skills: skills
+    };
+  
+    try {
+      const response = await fetch('https://resumegraderapi.onrender.com/matches/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(postData),
+      });
+  
+      if (!response.ok) {
+        throw new Error('Failed to create match');
+      }
+  
+      const result = await response.json();
+      console.log('Match created successfully:', result);
+    } catch (error) {
+      console.error('Error creating match:', error);
+    }
   };
 
   const handleBackClick = () => {
     setIsSubmitting(false);
   };
 
-  const handleResumeUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files && event.target.files[0]) {
-      setResume(event.target.files[0].name);
-    }
-  };
+  // const handleResumeUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  //   if (event.target.files && event.target.files[0]) {
+  //     setResume(event.target.files[0].name);
+  //   }
+  // };
 
   const handleCoverLetterChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     setCoverLetter(event.target.value);
@@ -93,6 +122,15 @@ const ApplicationPage: React.FC<ApplicationPageProps> = ({ job, goBack, navigate
                 <span className="text-gray-500">{resumeTitle ? resumeTitle : "No resume uploaded"}</span>
               </div>
               {resumeTitle && <Link href="/UserProfile" className="text-blue-500 mt-2">Edit</Link>}
+            </div>
+            <div className="mb-6">
+              <h2 className="text-lg font-bold text-gray-800 mb-4">Skills:</h2>
+              <ul className="text-gray-800 list-disc pl-5">
+                {skills.map((skill, index) => (
+                  <li key={index} className="mb-2 bg-gray-100 rounded-md p-2 shadow-sm"
+                  >{skill}</li>
+                ))}
+              </ul>
             </div>
             <div className="mb-6">
               <h2 className="text-lg font-bold text-gray-800 mb-4">Cover Letter</h2>

@@ -19,7 +19,7 @@ const SignIn: React.FC = () => {
   const [user, setUser] = useState<any>(null);
   const [showAdditionalInfo, setShowAdditionalInfo] = useState(false);
   const [showForgotPasswordPrompt, setShowForgotPasswordPrompt] = useState(false);
-  const [userInfo, setUserInfo] = useState({ "uid": "", "first_name": "", "last_name": "", "dob": "", "is_owner": false, "is_admin": false, "phone_number": "", "email": "" });
+  const [userInfo, setUserInfo] = useState({ "uid": "", "first_name": "", "last_name": "", "dob": "", "phone_number": "", "email": "" });
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -118,8 +118,6 @@ const SignIn: React.FC = () => {
           first_name: firstName,
           last_name: lastName,
           dob: formattedDob,
-          is_owner: false,
-          is_admin: false,
           phone_number: phone,
           email: email
         };
@@ -189,8 +187,6 @@ const SignIn: React.FC = () => {
         "last_name": user.displayName?.split(' ')[1] || "",
         "dob": dob,
         "uid": user.uid,
-        "is_owner": false,
-        "is_admin": false,
         "phone_number": phone,
         "email": user.email || ""
       });
@@ -226,8 +222,6 @@ const SignIn: React.FC = () => {
         "last_name": user.displayName?.split(' ')[1] || "",
         "dob": dob,
         "uid": user.uid,
-        "is_owner": false,
-        "is_admin": false,
         "phone_number": phone,
         "email": user.email || ""
       });

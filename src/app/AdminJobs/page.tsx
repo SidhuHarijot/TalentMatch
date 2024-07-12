@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import JobCard from '../components/JobCard';
 import Link from 'next/link';
+import { useAuth } from '../contexts/AuthContext';
 
 const jobTypeMapping: Record<string, string> = {
   FULL: 'Full-Time',
@@ -25,6 +26,7 @@ const AdminJobs: React.FC = () => {
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [editJob, setEditJob] = useState<any>(null);
   const [applicants, setApplicants] = useState<any[]>([]);
+  const { uid } = useAuth();
 
   useEffect(() => {
     const fetchJobs = async () => {
@@ -49,10 +51,10 @@ const AdminJobs: React.FC = () => {
 
   const formatDate = (dateObject: { day: number, month: number, year: number } | null) => {
     if (!dateObject) {
-      return '01-01-1970'; // Default date in case dateObject is null or undefined
+      return '1970-01-01'; // Default date in case dateObject is null or undefined
     }
     const { day, month, year } = dateObject;
-    return `${day.toString().padStart(2, '0')}-${month.toString().padStart(2, '0')}-${year}`;
+    return `${year.toString().padStart(4, '0')}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
   };
 
   const handleSearch = () => {
@@ -69,17 +71,21 @@ const AdminJobs: React.FC = () => {
   const handleJobClick = async (job: any) => {
     setSelectedJob(job);
     try {
-      const response = await fetch(`https://resumegraderapi.onrender.com/jobs/${job.job_id}/resumes`);
+      const response = await fetch(`https://resumegraderapi.onrender.com/matches?job_id=${job.job_id}`);
       const data = await response.json();
-      setResumes(data.resumes);
-    } catch (error) {
-      console.error('Error fetching resumes:', error);
-    }
-
-    try {
-      const response = await fetch(`https://resumegraderapi.onrender.com/jobs/${job.job_id}/applicants`);
-      const data = await response.json();
-      setApplicants(data.applicants || []);
+      if (Array.isArray(data)) {
+        const applicantDetails = await Promise.all(
+          data.map(async (applicant: any) => {
+            const userResponse = await fetch(`https://resumegraderapi.onrender.com/users/${applicant.uid}`);
+            const userData = await userResponse.json();
+            return { ...applicant, user: userData };
+          })
+        );
+        setApplicants(applicantDetails);
+      } else {
+        console.error('Expected an array but got:', data);
+        setApplicants([]);
+      }
     } catch (error) {
       console.error('Error fetching applicants:', error);
       setApplicants([]);
@@ -123,13 +129,26 @@ const AdminJobs: React.FC = () => {
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Ensure the application_deadline is a valid date string and not in the past
+    const application_deadline = new Date(editJob.application_deadline);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Set time to midnight to compare dates only
+    if (application_deadline < today) {
+      alert('The application deadline cannot be in the past.');
+      return;
+    }
+
     const deadlineParts = editJob.application_deadline.split('-');
+    const formattedDeadline = `${deadlineParts[2]}${deadlineParts[1]}${deadlineParts[0]}`;
+
     const updatedJob = {
+      job_id: editJob.job_id,
+      auth_uid: uid,
       title: editJob.title,
       company: editJob.company,
       description: editJob.description,
       required_skills: editJob.required_skills,
-      application_deadline: `${deadlineParts[2]}${deadlineParts[1]}${deadlineParts[0]}`,
+      application_deadline: formattedDeadline,
       location: editJob.location,
       salary: parseFloat(editJob.salary),
       job_type: editJob.job_type,
@@ -139,7 +158,7 @@ const AdminJobs: React.FC = () => {
     console.log('Updated Job:', updatedJob);
 
     try {
-      const response = await fetch(`https://resumegraderapi.onrender.com/jobs/${editJob.job_id}`, {
+      const response = await fetch('https://resumegraderapi.onrender.com/jobs/', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
@@ -157,7 +176,7 @@ const AdminJobs: React.FC = () => {
       } else {
         const errorResponse = await response.json();
         console.error('Failed to update job:', errorResponse); // Debugging line
-        alert('Failed to update job');
+        alert(`Failed to update job: ${JSON.stringify(errorResponse)}`); // Log detailed error message
       }
     } catch (error) {
       console.error('Error updating job:', error);
@@ -231,6 +250,7 @@ const AdminJobs: React.FC = () => {
                 className="border border-gray-300 rounded p-3 w-full text-gray-800"
                 value={editJob.application_deadline}
                 onChange={handleEditChange}
+                min={new Date().toISOString().split('T')[0]} // Prevent past dates
                 required
               />
             </div>
@@ -298,7 +318,7 @@ const AdminJobs: React.FC = () => {
         <div className="flex justify-between items-center mb-4">
           <h1 className="text-4xl font-bold text-gray-800">Job Listings</h1>
           <Link href="/PostJobs">
-            <span className="bg-gradient bg-blue-400 text-xl font-bold rounded px-6 py-3 cursor-pointer w-1/3 text-center">
+            <span className="bg-gradient bg-blue-500 text-xl font-bold rounded px-6 py-3 cursor-pointer w-1/3 text-center">
               Add New Job Postings 
             </span>
           </Link>
@@ -397,7 +417,8 @@ const AdminJobs: React.FC = () => {
                       {applicants.length > 0 ? (
                         applicants.map((applicant, index) => (
                           <li key={index} className="text-gray-700 mb-1">
-                            {applicant.name} - {applicant.email}
+                            {applicant.user.name.first_name} {applicant.user.name.last_name}
+                            {applicant.status && ` - ${applicant.status}`}
                           </li>
                         ))
                       ) : (

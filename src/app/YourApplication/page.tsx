@@ -3,9 +3,17 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '../contexts/AuthContext';
 
+interface AppliedJob {
+  match_id: number;
+  title: string;
+  company: string;
+  status: string;
+  description: string;
+}
+
 const YourApplications: React.FC = () => {
-  const [appliedJobs, setAppliedJobs] = useState<{ title: string; company: string; status: string; description: string; }[]>([]);
-  const [selectedJob, setSelectedJob] = useState<null | { title: string; company: string; status: string; description: string; }>(null);
+  const [appliedJobs, setAppliedJobs] = useState<AppliedJob[]>([]);
+  const [selectedJob, setSelectedJob] = useState<null | AppliedJob>(null);
   const [filter, setFilter] = useState<string>('All');
   
   const { uid } = useAuth();
@@ -17,7 +25,8 @@ const YourApplications: React.FC = () => {
           const response = await fetch(`https://resumegraderapi.onrender.com/matches/?uid=${uid}`);
           const data = await response.json();
 
-          const jobs = data.map(job => ({
+          const jobs = data.map((job: any) => ({
+            match_id: job.match_id,
             title: job.job.title,
             company: job.job.company,
             status: job.status,
@@ -34,14 +43,28 @@ const YourApplications: React.FC = () => {
     }
   }, [uid]);
 
-  const handleWithdraw = (index: number) => {
+  const handleWithdraw = async (match_id: number, index: number) => {
     if (confirm('Are you sure you want to withdraw your application?')) {
-      const updatedJobs = appliedJobs.filter((_, i) => i !== index);
-      setAppliedJobs(updatedJobs);
+      try {
+        const response = await fetch(`https://resumegraderapi.onrender.com/matches/${match_id}`, {
+          method: 'DELETE',
+        });
+
+        if (response.ok) {
+          const updatedJobs = appliedJobs.filter((_, i) => i !== index);
+          setAppliedJobs(updatedJobs);
+          alert('Application withdrawn successfully.');
+        } else {
+          alert('Failed to withdraw application.');
+        }
+      } catch (error) {
+        console.error('Error withdrawing application:', error);
+        alert('An error occurred while withdrawing the application.');
+      }
     }
   };
 
-  const handleJobClick = (job: { title: string; company: string; status: string; description: string; }) => {
+  const handleJobClick = (job: AppliedJob) => {
     setSelectedJob(job);
   };
 
@@ -83,7 +106,7 @@ const YourApplications: React.FC = () => {
               </button>
               <button
                 className="bg-red-500 text-white py-1 px-3 rounded hover:bg-red-600 mt-2 ml-2"
-                onClick={() => handleWithdraw(index)}
+                onClick={() => handleWithdraw(job.match_id, index)}
               >
                 Withdraw
               </button>

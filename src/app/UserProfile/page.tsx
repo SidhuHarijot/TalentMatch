@@ -240,7 +240,7 @@ const UserProfile: React.FC = () => {
     };
     
     try {
-      const response = await fetch(`https://resumegraderapi.onrender.com/resumes/${uid}`, {
+      const response = await fetch(`https://resumegraderapi.onrender.com/resumes/`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -292,7 +292,7 @@ const UserProfile: React.FC = () => {
 
   return (
     <div className="w-full max-w-4xl bg-white shadow-xl rounded-xl p-10">
-     <div className="flex justify-between items-center mb-4">
+      <div className="flex justify-between items-center mb-4">
         <Link href="/YourApplication">
         <button className="bg-gray-500 text-white rounded px-4 py-2">
           Your Applications

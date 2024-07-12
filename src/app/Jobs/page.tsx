@@ -10,7 +10,7 @@ const Jobs: React.FC = () => {
   const [isAdmin, setIsAdmin] = useState(false);
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-6 bg-gradient-to-tr from-blue-100 via-blue-200 to-blue-300">
+    <main className="flex min-h-screen flex-col items-center justify-center p-6 bg-gradient-to-tr from-blue-200 via-indigo-200 to-blue-300">
       <div>
         <div className="flex justify-between items-center mb-8">
           {role === 'admin' && (

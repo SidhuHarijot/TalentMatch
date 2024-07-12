@@ -1,20 +1,38 @@
 "use client";
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useAuth } from '../contexts/AuthContext';
 
 const YourApplications: React.FC = () => {
   const [appliedJobs, setAppliedJobs] = useState<{ title: string; company: string; status: string; description: string; }[]>([]);
   const [selectedJob, setSelectedJob] = useState<null | { title: string; company: string; status: string; description: string; }>(null);
   const [filter, setFilter] = useState<string>('All');
+  
+  const { uid } = useAuth();
 
   useEffect(() => {
-    // Fetch applied jobs from an API or use static data
-    setAppliedJobs([
-      { title: 'Software Engineer', company: 'Tech Solutions Inc.', status: 'Interview Scheduled', description: 'Full-time role focused on software development.' },
-      { title: 'QA Technician', company: 'Starfield Industry Ltd.', status: 'Applied', description: 'Quality assurance role for testing and ensuring product quality.' },
-      { title: 'Marketing Manager', company: 'Marketing Agency X', status: 'Rejected', description: 'Manage marketing campaigns and strategies.' },
-    ]);
-  }, []);
+    if (uid) {
+      const fetchAppliedJobs = async () => {
+        try {
+          const response = await fetch(`https://resumegraderapi.onrender.com/matches/?uid=${uid}`);
+          const data = await response.json();
+
+          const jobs = data.map(job => ({
+            title: job.job.title,
+            company: job.job.company,
+            status: job.status,
+            description: job.job.description,
+          }));
+
+          setAppliedJobs(jobs);
+        } catch (error) {
+          console.error('Error fetching applied jobs:', error);
+        }
+      };
+
+      fetchAppliedJobs();
+    }
+  }, [uid]);
 
   const handleWithdraw = (index: number) => {
     if (confirm('Are you sure you want to withdraw your application?')) {
@@ -74,7 +92,7 @@ const YourApplications: React.FC = () => {
         </div>
         {selectedJob && (
           <div className="mt-6 p-4 bg-gray-100 rounded-lg">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">Job Details{userAgent.</h2>
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">Job Details</h2>
             <p className="text-black"><strong>Title:</strong> {selectedJob.title}</p>
             <p className="text-black"><strong>Company:</strong> {selectedJob.company}</p>
             <p className="text-black"><strong>Status:</strong> {selectedJob.status}</p>

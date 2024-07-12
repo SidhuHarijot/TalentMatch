@@ -50,11 +50,16 @@ const NavBar: React.FC<NavBarProps> = ({ links }) => {
         </div>
         <div className="ml-4 flex items-center space-x-4">
           {isSignedIn ? (
+            <>
               <Link href="/SignIn">
                 <span className="text-lg text-black hover:text-blue-600 focus:text-blue-600 hover:font-bold focus:font-bold transition-transform duration-300 cursor-pointer">
                   Sign Out
                 </span>
               </Link>
+              <button onClick={handleRoleSwitch} className="text-lg text-black bg-gray-200 p-2 rounded">
+            {role === 'admin' ? 'Switch to User' : 'Switch to Admin'}
+          </button>
+              </>
           ) : (
             <>
             <Link href="/SignIn">

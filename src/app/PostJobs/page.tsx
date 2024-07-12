@@ -37,6 +37,7 @@ const PostJob: React.FC = () => {
   const [active, setActive] = useState(true);
   const [errors, setErrors] = useState<string[]>([]);
   const [jobId, setJobId] = useState<number | null>(null);
+  const [file, setFile] = useState<File | null>(null);
   const { uid } = useAuth();
 
   const validateForm = () => {
@@ -48,7 +49,19 @@ const PostJob: React.FC = () => {
     if (!applicationDeadline) newErrors.push('Application deadline is required');
     if (!location) newErrors.push('Location is required');
     if (!salary) newErrors.push('Salary is required');
+
+    // Check if the application deadline is in the future
+    const today = new Date();
+    const deadlineDate = new Date(applicationDeadline);
+    if (deadlineDate <= today) newErrors.push('Application deadline must be a future date');
+
     return newErrors;
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      setFile(e.target.files[0]);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -62,16 +75,29 @@ const PostJob: React.FC = () => {
 
     setErrors([]);
 
-    // Create a job with an empty description to get a job ID
+    // Format the application deadline to "DDMMYYYY"
+    const deadlineParts = applicationDeadline.split('-');
+    const applicationDeadlineFormatted = `${deadlineParts[2]}${deadlineParts[1]}${deadlineParts[0]}`;
+
+    const jobData = {
+      title,
+      company,
+      description,
+      application_deadline: applicationDeadlineFormatted,
+      location,
+      salary: parseFloat(salary),
+      job_type: jobType,
+      active,
+      auth_uid: uid || "default-uid",
+    };
+
     try {
-      const postResponse = await fetch('https://resumegraderapi.onrender.com/jobs', {
+      const postResponse = await fetch(`https://resumegraderapi.onrender.com/jobs/?title=${title}&company=${company}&description=${description}&application_deadline=${applicationDeadlineFormatted}&location=${location}&salary=${salary}&job_type=${jobType}&active=${active}&auth_uid=${uid || "default-uid"}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          auth_uid: uid
-        })
+        body: JSON.stringify([])
       });
 
       const postData = await postResponse.json();
@@ -80,44 +106,26 @@ const PostJob: React.FC = () => {
         const jobId = postData.job_id;
         setJobId(jobId);
 
-        // Format the application deadline to "DDMMYYYY"
-        const deadlineParts = applicationDeadline.split('-');
-        const applicationDeadlineFormatted = `${deadlineParts[2]}${deadlineParts[1]}${deadlineParts[0]}`;
+        if (file) {
+          const formData = new FormData();
+          formData.append('file', file);
+          formData.append('auth_uid', uid || "default-uid");
 
-        const updatedJobData = {
-          title: title || "",
-          company: company || "",
-          description: description || "",
-          required_skills: requiredSkills ? requiredSkills.split(',').map(skill => skill.trim()) : [],
-          application_deadline: applicationDeadlineFormatted,
-          location: location || "",
-          salary: salary ? parseFloat(salary) : 0,
-          job_type: jobType,
-          active: active,
-          auth_uid: uid
-        };
+          const fileResponse = await fetch(`https://resumegraderapi.onrender.com/jobs/${jobId}/upload`, {
+            method: 'POST',
+            body: formData
+          });
 
-        // PUT request to update the job with full details
-        const putResponse = await fetch(`https://resumegraderapi.onrender.com/jobs/${jobId}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(updatedJobData)
-        });
-
-        if (putResponse.ok) {
-          alert('Job posted and updated successfully');
-          // Redirect to the previous page
-          window.location.href = '/Jobs';
-        } else {
-          const putErrorData = await putResponse.json();
-          console.error('Update Job Response:', putErrorData);
-          alert(`Failed to update job: ${putErrorData.detail || putErrorData}`);
+          if (!fileResponse.ok) {
+            throw new Error('Failed to upload file');
+          }
         }
+
+        alert('Job posted successfully');
+        window.location.href = '/Jobs';
       } else {
         console.error('Create Job Response:', postData);
-        alert(`Failed to create job: ${postData.detail || postData}`);
+        setErrors([postData.detail || 'Failed to create job']);
       }
     } catch (error) {
       console.error('Error posting job:', error);
@@ -222,6 +230,14 @@ const PostJob: React.FC = () => {
               className="border border-gray-300 rounded p-3"
               checked={active}
               onChange={(e) => setActive(e.target.checked)}
+            />
+          </div>
+          <div className="mb-6">
+            <label className="block text-gray-700 font-semibold mb-2">Upload File</label>
+            <input
+              type="file"
+              className="border border-gray-300 rounded p-3 w-full text-gray-800"
+              onChange={handleFileChange}
             />
           </div>
           <button

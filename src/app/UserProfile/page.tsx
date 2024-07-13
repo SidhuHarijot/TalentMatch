@@ -235,7 +235,7 @@ const UserProfile: React.FC = () => {
         // Assign today's date if endDate is empty or null and not currently working
         entry.endDate = entry.endDate || getTodayDate();
       }
-      
+
       if (!entry.isSaved && entry.company && entry.role && entry.startDate && (entry.endDate || entry.currentlyWorking)) {
         handleSaveWorkHistory(index);
       }
@@ -262,7 +262,11 @@ const UserProfile: React.FC = () => {
         month: parseInt(entry.startDate.split('-')[1]),
         year: parseInt(entry.startDate.split('-')[0]),
       },
-      end_date: entry.currentlyWorking ? null : {
+      end_date: entry.currentlyWorking ? {
+        day: 0,
+        month: 0,
+        year: 0,
+      } : {
         day: parseInt(entry.endDate.split('-')[2]),
         month: parseInt(entry.endDate.split('-')[1]),
         year: parseInt(entry.endDate.split('-')[0]),

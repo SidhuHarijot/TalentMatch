@@ -85,8 +85,6 @@ const UserProfile: React.FC = () => {
         isExpanded: false,
       }));
       setEducationHistory(newEducationHistory);
-      console.log('New Work History:', newWorkHistory);
-      console.log('New Education History:', newEducationHistory);
 
     } catch (error) {
       console.error('Error uploading resume:', error);
@@ -221,7 +219,23 @@ const UserProfile: React.FC = () => {
   };
 
   const handleSaveProfile = async () => {
+    const getTodayDate = () => {
+      const today = new Date();
+      const day = String(today.getDate()).padStart(2, '0');
+      const month = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
+      const year = today.getFullYear();
+      return `${year}-${month}-${day}`;
+    };
+
     const savedWorkHistory = workHistory.map((entry, index) => {
+      // If currentlyWorking is true, set endDate to today's date
+      if (entry.currentlyWorking) {
+        entry.endDate = getTodayDate();
+      } else {
+        // Assign today's date if endDate is empty or null and not currently working
+        entry.endDate = entry.endDate || getTodayDate();
+      }
+
       if (!entry.isSaved && entry.company && entry.role && entry.startDate && (entry.endDate || entry.currentlyWorking)) {
         handleSaveWorkHistory(index);
       }
@@ -229,6 +243,10 @@ const UserProfile: React.FC = () => {
     });
   
     const savedEducationHistory = educationHistory.map((entry, index) => {
+      // Assign today's date if startDate or endDate is empty or null
+      entry.startDate = entry.startDate || getTodayDate();
+      entry.endDate = entry.endDate || getTodayDate();
+
       if (!entry.isSaved && entry.institution && entry.course && entry.startDate && entry.endDate) {
         handleSaveEducationHistory(index);
       }
@@ -244,7 +262,11 @@ const UserProfile: React.FC = () => {
         month: parseInt(entry.startDate.split('-')[1]),
         year: parseInt(entry.startDate.split('-')[0]),
       },
-      end_date: entry.currentlyWorking ? null : {
+      end_date: entry.currentlyWorking ? {
+        day: 0,
+        month: 0,
+        year: 0,
+      } : {
         day: parseInt(entry.endDate.split('-')[2]),
         month: parseInt(entry.endDate.split('-')[1]),
         year: parseInt(entry.endDate.split('-')[0]),
@@ -278,7 +300,7 @@ const UserProfile: React.FC = () => {
     
     try {
       const response = await fetch(`https://resumegraderapi.onrender.com/resumes/`, {
-        method: 'PUT',
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -296,14 +318,6 @@ const UserProfile: React.FC = () => {
       alert('Failed to save profile.');
     }
     console.log('Payload:', payload);
-    console.log('First Name:', firstName);
-    console.log('Last Name:', lastName);
-    console.log('Email:', email);
-    console.log('Resume:', resume);
-    console.log('Work History:', savedWorkHistory);
-    console.log('Education History:', savedEducationHistory);
-    console.log('Skills:', skills);
-    console.log('Applied Jobs:', appliedJobs);
   };
 
   useEffect(() => {

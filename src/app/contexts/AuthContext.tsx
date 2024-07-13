@@ -22,6 +22,7 @@ interface AuthContextProps {
     is_admin: boolean;
     phone_number: string;
     email: string;
+    saved_jobs: number[];
   } | null;
   signOut: () => Promise<void>;
 }

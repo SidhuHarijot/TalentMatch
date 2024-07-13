@@ -136,6 +136,36 @@ const UserProfile: React.FC = () => {
     }
   };
 
+  const validateProfile = () => {
+    let missingFields = [];
+
+    // Check Work History for empty or null fields
+    for (const entry of workHistory) {
+      if (!entry.company) missingFields.push('Company in Work History');
+      if (!entry.role) missingFields.push('Role in Work History');
+      if (!entry.startDate) missingFields.push('Start Date in Work History');
+      if (!entry.endDate && !entry.currentlyWorking) missingFields.push('End Date or Currently Working in Work History');
+    }
+  
+    // Assuming there's a similar loop for Education History
+    // Add similar checks for Education History fields
+    for (const entry of educationHistory) {
+      if (!entry.institution) missingFields.push('Institution in Education History');
+      if (!entry.course) missingFields.push('Course in Education History');
+      if (!entry.startDate) missingFields.push('Start Date in Education History');
+      if (!entry.endDate) missingFields.push('End Date in Education History');
+    }
+
+    // If there are any missing fields, alert the user and return false
+    if (missingFields.length > 0) {
+      alert(`Please fill in all required fields before saving your profile. Missing: ${missingFields.join(', ')}.`);
+      return false;
+    }
+
+    // All entries are valid
+    return true;
+  };
+
   const handleRemoveResume = () => setResume(null);
 
   const handleSaveWorkHistory = (index: number) => {
@@ -219,6 +249,11 @@ const UserProfile: React.FC = () => {
   };
 
   const handleSaveProfile = async () => {
+    // Validate profile before saving
+    if (!validateProfile()) {
+      alert('Please fill in all required fields before saving your profile.');
+      return; // Stop execution if validation fails
+    }
     const getTodayDate = () => {
       const today = new Date();
       const day = String(today.getDate()).padStart(2, '0');

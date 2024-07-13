@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import JobCard from '../components/JobCard';
 import ApplicationPage from '../components/ApplicationPage';
 import SavedJobsPage from '../components/SavedJobsPage';
+import { useAuth } from '../contexts/AuthContext'; // Ensure useAuth is imported
 
 const Jobs: React.FC<{}> = () => {
   const [selectedJob, setSelectedJob] = useState<any>(null);
@@ -18,6 +19,9 @@ const Jobs: React.FC<{}> = () => {
   const [error, setError] = useState<string | null>(null);
   const [savedJobs, setSavedJobs] = useState<any[]>([]);
   const [viewingSavedJobs, setViewingSavedJobs] = useState<boolean>(false);
+  const [appliedJobs, setAppliedJobs] = useState<any[]>([]);
+  const { uid } = useAuth(); // Use useAuth to get uid
+
   const uniqueLocations = [...new Set(jobs.map(job => job.location))];
 
   useEffect(() => {
@@ -31,7 +35,21 @@ const Jobs: React.FC<{}> = () => {
         }
         const data = await response.json();
         setJobs(data);
-        setFilteredJobs(data);
+
+        if (uid) {
+          const appliedResponse = await fetch(`https://resumegraderapi.onrender.com/matches/?uid=${uid}`);
+          if (!appliedResponse.ok) {
+            throw new Error('Failed to fetch applied jobs');
+          }
+          const appliedData = await appliedResponse.json();
+          setAppliedJobs(appliedData);
+
+          const appliedJobIds = appliedData.map((job: any) => job.job_id);
+          const filtered = data.filter((job: any) => !appliedJobIds.includes(job.job_id));
+          setFilteredJobs(filtered);
+        } else {
+          setFilteredJobs(data);
+        }
       } catch (error) {
         setError('Error fetching jobs. Please try again later.');
       } finally {
@@ -40,12 +58,7 @@ const Jobs: React.FC<{}> = () => {
     };
 
     fetchJobs();
-  }, []);
-
-  const formatDate = (dateObject: { day: number, month: number, year: number }) => {
-    const { day, month, year } = dateObject;
-    return `${day.toString().padStart(2, '0')}-${month.toString().padStart(2, '0')}-${year}`;
-  };
+  }, [uid]);
 
   const handleSearch = () => {
     const filtered = jobs.filter(job => (
@@ -105,6 +118,21 @@ const Jobs: React.FC<{}> = () => {
     setApplyingJob(null);
   };
 
+  const getJobTypeFullName = (type: string) => {
+    switch (type) {
+      case 'FULL':
+        return 'Full-time';
+      case 'PART':
+        return 'Part-time';
+      case 'CONT':
+        return 'Contract';
+      case 'UNKN':
+        return 'Unknown';
+      default:
+        return 'Unknown';
+    }
+  };
+
   if (applyingJob) {
     return <ApplicationPage job={applyingJob} goBack={handleGoBack} navigateToProfile={() => {}} />;
   }
@@ -151,6 +179,7 @@ const Jobs: React.FC<{}> = () => {
             <option value="FULL">Full-time</option>
             <option value="PART">Part-time</option>
             <option value="CONTRACT">Contract</option>
+            <option value="UNKN">Unknown</option>
           </select>
           <button
             onClick={handleSearch}
@@ -189,7 +218,7 @@ const Jobs: React.FC<{}> = () => {
                       company={job.company}
                       location={job.location}
                       salary={job.salary}
-                      job_type={job.job_type}
+                      job_type={getJobTypeFullName(job.job_type)}
                       description={`${job.description.substring(0, 100)}...`}
                     />
                     <button
@@ -232,7 +261,10 @@ const Jobs: React.FC<{}> = () => {
                     <strong>Salary:</strong> {selectedJob.salary}
                   </p>
                   <p className="text-gray-700 mb-2">
-                    <strong>Type:</strong> {selectedJob.job_type}
+                    <strong>Type:</strong> {getJobTypeFullName(selectedJob.job_type)}
+                  </p>
+                  <p className="text-gray-700 mb-2">
+                    <strong>Required Skills:</strong> {selectedJob.required_skills.join(', ')}
                   </p>
                   <p className="text-gray-700 mb-2">
                     <strong>Description:</strong> {selectedJob.description}

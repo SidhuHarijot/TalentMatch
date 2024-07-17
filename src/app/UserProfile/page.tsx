@@ -43,6 +43,55 @@ const UserProfile: React.FC = () => {
   const minDate = new Date(new Date().setFullYear(new Date().getFullYear() - 50)).toISOString().split('T')[0];
   const { uid, user } = useAuth();
 
+  const fetchAndAutofillResume = async () => {
+    try {
+      const response = await fetch(`https://resumegraderapi.onrender.com/resumes/${uid}`, {
+        method: 'GET',
+        headers: {
+          'accept': 'application/json'
+        }
+      });
+  
+      if (!response.ok) {
+        if (response.status === 404) {
+          console.log('No existing resume found.');
+        } else {
+          throw new Error('Failed to fetch resume');
+        }
+        return;
+      }
+  
+      const result = await response.json();
+      console.log('Resume fetched successfully:', result);
+      setSkills(result.skills);
+  
+      const newWorkHistory = result.experience.map((exp: any) => ({
+        company: exp.company_name,
+        role: exp.title,
+        startDate: exp.start_date.year ? `${exp.start_date.year}-${String(Math.max(1, exp.start_date.month)).padStart(2, '0')}-${String(Math.max(1, exp.start_date.day)).padStart(2, '0')}` : '',
+        endDate: exp.end_date.year ? `${exp.end_date.year}-${String(Math.max(1, exp.end_date.month)).padStart(2, '0')}-${String(Math.max(1, exp.end_date.day)).padStart(2, '0')}` : '',
+        currentlyWorking: !exp.end_date.year,
+        isSaved: true,
+        isExpanded: false,
+        description: exp.description || '',
+      }));
+      setWorkHistory(newWorkHistory);
+  
+      const newEducationHistory = result.education.map((edu: any) => ({
+        institution: edu.institution,
+        course: edu.course_name,
+        startDate: edu.start_date.year ? `${edu.start_date.year}-${String(Math.max(1, edu.start_date.month)).padStart(2, '0')}-${String(Math.max(1, edu.start_date.day)).padStart(2, '0')}` : '',
+        endDate: edu.end_date.year ? `${edu.end_date.year}-${String(Math.max(1, edu.end_date.month)).padStart(2, '0')}-${String(Math.max(1, edu.end_date.day)).padStart(2, '0')}` : '',
+        isSaved: true,
+        isExpanded: false,
+      }));
+      setEducationHistory(newEducationHistory);
+  
+    } catch (error) {
+      console.error('Error fetching resume:', error);
+    }
+  };
+
   const uploadResume = async (file: File) => {
     const formData = new FormData();
     formData.append('file', file);
@@ -85,8 +134,6 @@ const UserProfile: React.FC = () => {
         isExpanded: false,
       }));
       setEducationHistory(newEducationHistory);
-      console.log('New Work History:', newWorkHistory);
-      console.log('New Education History:', newEducationHistory);
 
     } catch (error) {
       console.error('Error uploading resume:', error);
@@ -136,6 +183,36 @@ const UserProfile: React.FC = () => {
       setResume(file);
       uploadResume(file);
     }
+  };
+
+  const validateProfile = () => {
+    let missingFields = [];
+
+    // Check Work History for empty or null fields
+    for (const entry of workHistory) {
+      if (!entry.company) missingFields.push('Company in Work History');
+      if (!entry.role) missingFields.push('Role in Work History');
+      if (!entry.startDate) missingFields.push('Start Date in Work History');
+      if (!entry.endDate && !entry.currentlyWorking) missingFields.push('End Date or Currently Working in Work History');
+    }
+  
+    // Assuming there's a similar loop for Education History
+    // Add similar checks for Education History fields
+    for (const entry of educationHistory) {
+      if (!entry.institution) missingFields.push('Institution in Education History');
+      if (!entry.course) missingFields.push('Course in Education History');
+      if (!entry.startDate) missingFields.push('Start Date in Education History');
+      if (!entry.endDate) missingFields.push('End Date in Education History');
+    }
+
+    // If there are any missing fields, alert the user and return false
+    if (missingFields.length > 0) {
+      alert(`Please fill in all required fields before saving your profile. Missing: ${missingFields.join(', ')}.`);
+      return false;
+    }
+
+    // All entries are valid
+    return true;
   };
 
   const handleRemoveResume = () => setResume(null);
@@ -221,7 +298,28 @@ const UserProfile: React.FC = () => {
   };
 
   const handleSaveProfile = async () => {
+    // Validate profile before saving
+    if (!validateProfile()) {
+      alert('Please fill in all required fields before saving your profile.');
+      return; // Stop execution if validation fails
+    }
+    const getTodayDate = () => {
+      const today = new Date();
+      const day = String(today.getDate()).padStart(2, '0');
+      const month = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
+      const year = today.getFullYear();
+      return `${year}-${month}-${day}`;
+    };
+
     const savedWorkHistory = workHistory.map((entry, index) => {
+      // If currentlyWorking is true, set endDate to today's date
+      if (entry.currentlyWorking) {
+        entry.endDate = getTodayDate();
+      } else {
+        // Assign today's date if endDate is empty or null and not currently working
+        entry.endDate = entry.endDate || getTodayDate();
+      }
+
       if (!entry.isSaved && entry.company && entry.role && entry.startDate && (entry.endDate || entry.currentlyWorking)) {
         handleSaveWorkHistory(index);
       }
@@ -229,6 +327,10 @@ const UserProfile: React.FC = () => {
     });
   
     const savedEducationHistory = educationHistory.map((entry, index) => {
+      // Assign today's date if startDate or endDate is empty or null
+      entry.startDate = entry.startDate || getTodayDate();
+      entry.endDate = entry.endDate || getTodayDate();
+
       if (!entry.isSaved && entry.institution && entry.course && entry.startDate && entry.endDate) {
         handleSaveEducationHistory(index);
       }
@@ -244,7 +346,11 @@ const UserProfile: React.FC = () => {
         month: parseInt(entry.startDate.split('-')[1]),
         year: parseInt(entry.startDate.split('-')[0]),
       },
-      end_date: entry.currentlyWorking ? null : {
+      end_date: entry.currentlyWorking ? {
+        day: 0,
+        month: 0,
+        year: 0,
+      } : {
         day: parseInt(entry.endDate.split('-')[2]),
         month: parseInt(entry.endDate.split('-')[1]),
         year: parseInt(entry.endDate.split('-')[0]),
@@ -278,7 +384,7 @@ const UserProfile: React.FC = () => {
     
     try {
       const response = await fetch(`https://resumegraderapi.onrender.com/resumes/`, {
-        method: 'PUT',
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -296,15 +402,13 @@ const UserProfile: React.FC = () => {
       alert('Failed to save profile.');
     }
     console.log('Payload:', payload);
-    console.log('First Name:', firstName);
-    console.log('Last Name:', lastName);
-    console.log('Email:', email);
-    console.log('Resume:', resume);
-    console.log('Work History:', savedWorkHistory);
-    console.log('Education History:', savedEducationHistory);
-    console.log('Skills:', skills);
-    console.log('Applied Jobs:', appliedJobs);
   };
+
+  useEffect(() => {
+    if (uid) {
+      fetchAndAutofillResume();
+    }
+  }, [uid]);
 
   useEffect(() => {
     if (workHistory.length > 1) {

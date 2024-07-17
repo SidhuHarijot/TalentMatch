@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import JobCard from '../components/JobCard';
 import ApplicationPage from '../components/ApplicationPage';
 import SavedJobsPage from '../components/SavedJobsPage';
-import { useAuth } from '../contexts/AuthContext'; // Ensure useAuth is imported
+import { useAuth } from '../contexts/AuthContext';
 
 const Jobs: React.FC<{}> = () => {
   const [selectedJob, setSelectedJob] = useState<any>(null);
@@ -20,7 +20,7 @@ const Jobs: React.FC<{}> = () => {
   const [savedJobs, setSavedJobs] = useState<any[]>([]);
   const [viewingSavedJobs, setViewingSavedJobs] = useState<boolean>(false);
   const [appliedJobs, setAppliedJobs] = useState<any[]>([]);
-  const { uid } = useAuth(); // Use useAuth to get uid
+  const { uid } = useAuth();
 
   const uniqueLocations = [...new Set(jobs.map(job => job.location))];
 
@@ -82,10 +82,30 @@ const Jobs: React.FC<{}> = () => {
     setApplyingJob(job);
   };
 
-  const handleSaveJob = (job: any) => {
+  const handleSaveJob = async (job: any) => {
     if (!savedJobs.some(savedJob => savedJob.job_id === job.job_id)) {
-      setSavedJobs([...savedJobs, job]);
-      window.alert(`You have saved the job: ${job.title}`);
+      try {
+        const response = await fetch('https://resumegraderapi.onrender.com/users/saved_jobs', {
+          method: 'POST',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            uid: uid,
+            job_id: job.job_id
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to save job');
+        }
+
+        setSavedJobs([...savedJobs, job]);
+        window.alert(`You have saved the job: ${job.title}`);
+      } catch (error) {
+        window.alert('Error saving job. Please try again later.');
+      }
     }
   };
 

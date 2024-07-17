@@ -167,7 +167,7 @@ const Jobs: React.FC<{}> = () => {
   }
 
   if (viewingSavedJobs) {
-    console.log('savedJobs:', savedJobs);
+    console.log(savedJobs);
     return <SavedJobsPage savedJobs={savedJobs} setViewingSavedJobs={setViewingSavedJobs} handleApply={handleApply} handleDeleteJob={handleDeleteJob} />;
   }
 

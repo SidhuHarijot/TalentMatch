@@ -3,10 +3,12 @@
 import React, { useState } from 'react';
 import UserJobs from '../UserJobs/page'; 
 import AdminJobs from '../AdminJobs/page'; 
+import Matches from '../Matches/page';
 import { useAuth } from '../contexts/AuthContext';
 
 const Jobs: React.FC = () => {
   const { role } = useAuth();
+  const [currentPage, setCurrentPage] = useState('UserJobs');
   const [isAdmin, setIsAdmin] = useState(false);
 
   return (
@@ -16,21 +18,29 @@ const Jobs: React.FC = () => {
           {role === 'admin' && (
             <div>
               <button
-                className={`mx-2 p-2 ${!isAdmin ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'} rounded transition-colors duration-300`}
-                onClick={() => setIsAdmin(false)}
+                className={`mx-2 p-2 ${currentPage === 'UserJobs' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'} rounded transition-colors duration-300`}
+                onClick={() => setCurrentPage('UserJobs')}
               >
                 User Jobs
               </button>
               <button
-                className={`mx-2 p-2 ${isAdmin ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'} rounded transition-colors duration-300`}
-                onClick={() => setIsAdmin(true)}
+                className={`mx-2 p-2 ${currentPage === 'AdminJobs' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'} rounded transition-colors duration-300`}
+                onClick={() => setCurrentPage('AdminJobs')}
               >
                 Admin Jobs
+              </button>
+              <button
+                className={`mx-2 p-2 ${currentPage === 'Matches' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'} rounded transition-colors duration-300`}
+                onClick={() => setCurrentPage('Matches')}
+              >
+                Matches
               </button>
             </div>
           )}
         </div>
-        {isAdmin ? <AdminJobs /> : <UserJobs />}
+        {currentPage === 'AdminJobs' && <AdminJobs />}
+        {currentPage === 'UserJobs' && <UserJobs />}
+        {currentPage === 'Matches' && <Matches />}
       </div>
     </main>
   );

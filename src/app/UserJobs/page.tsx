@@ -47,6 +47,15 @@ const Jobs: React.FC<{}> = () => {
           const appliedJobIds = appliedData.map((job: any) => job.job_id);
           const filtered = data.filter((job: any) => !appliedJobIds.includes(job.job_id));
           setFilteredJobs(filtered);
+
+          const userResponse = await fetch(`https://resumegraderapi.onrender.com/users/${uid}`);
+          if (!userResponse.ok) {
+            throw new Error('Failed to fetch user data');
+          }
+          const userData = await userResponse.json();
+          const savedJobIds = userData.saved_jobs;
+          const savedJobsList = data.filter((job: any) => savedJobIds.includes(job.job_id));
+          setSavedJobs(savedJobsList);
         } else {
           setFilteredJobs(data);
         }
@@ -158,6 +167,7 @@ const Jobs: React.FC<{}> = () => {
   }
 
   if (viewingSavedJobs) {
+    console.log('savedJobs:', savedJobs);
     return <SavedJobsPage savedJobs={savedJobs} setViewingSavedJobs={setViewingSavedJobs} handleApply={handleApply} handleDeleteJob={handleDeleteJob} />;
   }
 
@@ -222,15 +232,15 @@ const Jobs: React.FC<{}> = () => {
           </select>
         </div>
         {loading ? (
-          <div className="flex justify-center items-center">
-            <div className="loader">Loading...</div>
+          <div className="flex justify-center items-center min-h-[50vh]">
+            <div className="text-xl font-semibold text-gray-700">Loading jobs...</div>
           </div>
         ) : error ? (
-          <div className="text-red-500">{error}</div>
+          <div className="text-red-500 text-center w-full">{error}</div>
         ) : (
-          <div className="flex">
+          <div className="flex flex-wrap justify-between">
             <div className="w-2/5 p-4">
-              {currentJobs.length > 0 ? (
+              {filteredJobs.length > 0 ? (
                 currentJobs.map((job, index) => (
                   <div key={index} className="mb-4" onClick={() => setSelectedJob(job)}>
                     <JobCard

@@ -78,11 +78,19 @@ const PostJob: React.FC = () => {
         const data = await response.json();
         console.log('File upload response:', data); // For testing purposes
         // Set the form fields with the response data
+        const { year, month, day } = data.application_deadline;
+        let formattedApplicationDeadline;
+        if (year === 0 && month === 0 && day === 0) {
+          const today = new Date();
+          formattedApplicationDeadline = today.toISOString().split('T')[0]; // Format YYYY-MM-DD
+        } else {
+          formattedApplicationDeadline = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        }
         setTitle(data.title);
         setCompany(data.company);
         setDescription(data.description);
         setRequiredSkills(data.required_skills.join(', ')); // Assuming required_skills is an array of strings
-        setApplicationDeadline(`${data.application_deadline.year}-${String(data.application_deadline.month).padStart(2, '0')}-${String(data.application_deadline.day).padStart(2, '0')}`); // Format YYYY-MM-DD
+        setApplicationDeadline(formattedApplicationDeadline);
         setLocation(data.location);
         setSalary(data.salary.toString());
         setJobType(data.job_type);

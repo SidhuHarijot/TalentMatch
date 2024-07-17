@@ -58,9 +58,41 @@ const PostJob: React.FC = () => {
     return newErrors;
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    console.log('File change event:', e.target.files); // For testing purposes
     if (e.target.files) {
-      setFile(e.target.files[0]);
+      const file = e.target.files[0];
+      const formData = new FormData();
+      formData.append('file', file);
+  
+      try {
+        const response = await fetch(`https://resumegraderapi.onrender.com/jobs/${uid}`, {
+          method: 'POST',
+          body: formData,
+        });
+  
+        if (!response.ok) {
+          throw new Error('Failed to upload file');
+        }
+  
+        const data = await response.json();
+        console.log('File upload response:', data); // For testing purposes
+        // Set the form fields with the response data
+        setTitle(data.title);
+        setCompany(data.company);
+        setDescription(data.description);
+        setRequiredSkills(data.required_skills.join(', ')); // Assuming required_skills is an array of strings
+        setApplicationDeadline(`${data.application_deadline.year}-${String(data.application_deadline.month).padStart(2, '0')}-${String(data.application_deadline.day).padStart(2, '0')}`); // Format YYYY-MM-DD
+        setLocation(data.location);
+        setSalary(data.salary.toString());
+        setJobType(data.job_type);
+        setActive(data.active);
+        setJobId(data.job_id); // Assuming you want to store the job_id as well
+  
+      } catch (error) {
+        console.error('Error uploading file:', error);
+        alert('An error occurred while uploading the file.');
+      }
     }
   };
 

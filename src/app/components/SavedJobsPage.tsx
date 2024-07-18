@@ -1,23 +1,61 @@
 import React, { useState } from 'react';
 import JobCard from './JobCard';
+import { useAuth } from '../contexts/AuthContext';
 
 interface SavedJobsPageProps {
   savedJobs: any[];
   setViewingSavedJobs: (viewing: boolean) => void;
   handleApply: (job: any) => void;
   handleDeleteJob: (jobId: string) => void;
+  setSavedJobs: (jobs: any[]) => void;
 }
 
-const SavedJobsPage: React.FC<SavedJobsPageProps> = ({ savedJobs, setViewingSavedJobs, handleApply, handleDeleteJob }) => {
+const SavedJobsPage: React.FC<SavedJobsPageProps> = ({ 
+  savedJobs, 
+  setViewingSavedJobs, 
+  handleApply, 
+  handleDeleteJob, 
+  setSavedJobs 
+}) => {
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [selectedJob, setSelectedJob] = useState<any>(null);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const { uid } = useAuth();
 
   const filteredJobs = savedJobs.filter((job) =>
     job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     job.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
     job.location.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const handleDeleteJobFromApi = async (jobId: string) => {
+    try {
+      const response = await fetch('https://resumegraderapi.onrender.com/user/saved_jobs', {
+        method: 'DELETE',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          uid: uid,
+          job_id: jobId
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to delete saved job');
+      }
+
+      const updatedSavedJobs = savedJobs.filter(job => job.job_id !== jobId);
+      setSavedJobs(updatedSavedJobs);
+      setConfirmDelete(null);
+      window.alert('Job deleted successfully');
+    } catch (error) {
+      console.error('Error:', error);
+      window.alert(error.message || 'Error deleting job. Please try again later.');
+    }
+  };
 
   return (
     <main className="flex flex-col items-center p-6 bg-gray-100 min-h-screen">
@@ -63,17 +101,17 @@ const SavedJobsPage: React.FC<SavedJobsPageProps> = ({ savedJobs, setViewingSave
                   </button>
                 </div>
                 <button
-                  onClick={() => setConfirmDelete(job.id)}
+                  onClick={() => setConfirmDelete(job.job_id)}
                   className="bg-red-500 text-white rounded px-4 py-2 mt-4 w-full"
                 >
                   Delete
                 </button>
-                {confirmDelete === job.id && (
+                {confirmDelete === job.job_id && (
                   <div className="absolute inset-0 bg-gray-800 bg-opacity-75 flex flex-col items-center justify-center p-6 rounded-lg shadow-lg">
                     <p className="text-white mb-4 text-center">Are you sure you want to delete this job?</p>
                     <div className="flex space-x-4">
                       <button
-                        onClick={() => handleDeleteJob(job.id)}
+                        onClick={() => handleDeleteJobFromApi(job.job_id)}
                         className="bg-red-500 text-white rounded px-4 py-2"
                       >
                         Yes

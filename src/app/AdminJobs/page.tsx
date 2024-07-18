@@ -73,22 +73,22 @@ const AdminJobs: React.FC = () => {
     try {
       const response = await fetch(`https://resumegraderapi.onrender.com/matches?job_id=${job.job_id}`);
       const data = await response.json();
-      if (Array.isArray(data)) {
-        const applicantDetails = await Promise.all(
-          data.map(async (applicant: any) => {
-            const userResponse = await fetch(`https://resumegraderapi.onrender.com/users/${applicant.uid}`);
-            const userData = await userResponse.json();
-            return { ...applicant, user: userData };
-          })
-        );
-        setApplicants(applicantDetails);
-      } else {
-        console.error('Expected an array but got:', data);
-        setApplicants([]);
-      }
+      // if (Array.isArray(data)) {
+      //   const applicantDetails = await Promise.all(
+      //     data.map(async (applicant: any) => {
+      //       const userResponse = await fetch(`https://resumegraderapi.onrender.com/users/${applicant.uid}`);
+      //       const userData = await userResponse.json();
+      //       return { ...applicant, user: userData };
+      //     })
+      //   );
+      //   setApplicants(applicantDetails);
+      // } else {
+      //   console.error('Expected an array but got:', data);
+      //   setApplicants([]);
+      // }
     } catch (error) {
       console.error('Error fetching applicants:', error);
-      setApplicants([]);
+      // setApplicants([]);
     }
   };
 
@@ -411,7 +411,7 @@ const AdminJobs: React.FC = () => {
                     <strong>Application Deadline:</strong> {formatDate(selectedJob.application_deadline)}
                   </p>
                   <p className="text-gray-700 mb-4">{selectedJob.details ? selectedJob.details : selectedJob.description}</p>
-                  <div className="mt-6">
+                  {/* <div className="mt-6">
                     <h3 className="text-lg font-bold text-gray-800 mb-2">Applicants</h3>
                     <ul>
                       {applicants.length > 0 ? (
@@ -425,7 +425,7 @@ const AdminJobs: React.FC = () => {
                         <li className="text-gray-500">No applicants found.</li>
                       )}
                     </ul>
-                  </div>
+                  </div> */}
                 </div>
               ) : (
                 <div className="text-center text-gray-500">Select a job to view details.</div>

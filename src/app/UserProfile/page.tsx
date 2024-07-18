@@ -43,6 +43,55 @@ const UserProfile: React.FC = () => {
   const minDate = new Date(new Date().setFullYear(new Date().getFullYear() - 50)).toISOString().split('T')[0];
   const { uid, user } = useAuth();
 
+  const fetchAndAutofillResume = async () => {
+    try {
+      const response = await fetch(`https://resumegraderapi.onrender.com/resumes/${uid}`, {
+        method: 'GET',
+        headers: {
+          'accept': 'application/json'
+        }
+      });
+  
+      if (!response.ok) {
+        if (response.status === 404) {
+          console.log('No existing resume found.');
+        } else {
+          throw new Error('Failed to fetch resume');
+        }
+        return;
+      }
+  
+      const result = await response.json();
+      console.log('Resume fetched successfully:', result);
+      setSkills(result.skills);
+  
+      const newWorkHistory = result.experience.map((exp: any) => ({
+        company: exp.company_name,
+        role: exp.title,
+        startDate: exp.start_date.year ? `${exp.start_date.year}-${String(Math.max(1, exp.start_date.month)).padStart(2, '0')}-${String(Math.max(1, exp.start_date.day)).padStart(2, '0')}` : '',
+        endDate: exp.end_date.year ? `${exp.end_date.year}-${String(Math.max(1, exp.end_date.month)).padStart(2, '0')}-${String(Math.max(1, exp.end_date.day)).padStart(2, '0')}` : '',
+        currentlyWorking: !exp.end_date.year,
+        isSaved: true,
+        isExpanded: false,
+        description: exp.description || '',
+      }));
+      setWorkHistory(newWorkHistory);
+  
+      const newEducationHistory = result.education.map((edu: any) => ({
+        institution: edu.institution,
+        course: edu.course_name,
+        startDate: edu.start_date.year ? `${edu.start_date.year}-${String(Math.max(1, edu.start_date.month)).padStart(2, '0')}-${String(Math.max(1, edu.start_date.day)).padStart(2, '0')}` : '',
+        endDate: edu.end_date.year ? `${edu.end_date.year}-${String(Math.max(1, edu.end_date.month)).padStart(2, '0')}-${String(Math.max(1, edu.end_date.day)).padStart(2, '0')}` : '',
+        isSaved: true,
+        isExpanded: false,
+      }));
+      setEducationHistory(newEducationHistory);
+  
+    } catch (error) {
+      console.error('Error fetching resume:', error);
+    }
+  };
+
   const uploadResume = async (file: File) => {
     const formData = new FormData();
     formData.append('file', file);
@@ -354,6 +403,12 @@ const UserProfile: React.FC = () => {
     }
     console.log('Payload:', payload);
   };
+
+  useEffect(() => {
+    if (uid) {
+      fetchAndAutofillResume();
+    }
+  }, [uid]);
 
   useEffect(() => {
     if (workHistory.length > 1) {

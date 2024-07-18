@@ -37,7 +37,7 @@ const SavedJobsPage: React.FC<SavedJobsPageProps> = ({
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          uid: uid, // Pass uid as a string
+          uid: uid,
           job_id: jobId
         })
       });
@@ -111,7 +111,7 @@ const SavedJobsPage: React.FC<SavedJobsPageProps> = ({
                     <p className="text-white mb-4 text-center">Are you sure you want to delete this job?</p>
                     <div className="flex space-x-4">
                       <button
-                        onClick={() => handleDeleteJobFromApi(job.job_id)} // Use the renamed function
+                        onClick={() => handleDeleteJobFromApi(job.job_id)}
                         className="bg-red-500 text-white rounded px-4 py-2"
                       >
                         Yes

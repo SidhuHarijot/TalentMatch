@@ -222,7 +222,7 @@ const MatchesPage: React.FC = () => {
                         </div>
                         <p><strong>Match ID:</strong> {match.match_id}</p>
                         <p><strong>Status:</strong> {match.status}</p>
-                        <p><strong>User:</strong> {match.user.name.first_name} {match.user.name.last_name}</p>
+                        <p><strong>Applicant:</strong> {match.user.name.first_name} {match.user.name.last_name}</p>
                       </div>
                     ))}
                   </div>

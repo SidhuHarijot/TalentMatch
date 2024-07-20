@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import JobCard from '../components/JobCard';
 import ApplicationPage from '../components/ApplicationPage';
 import SavedJobsPage from '../components/SavedJobsPage';
-import { useAuth } from '../contexts/AuthContext'; // Ensure useAuth is imported
+import { useAuth } from '../contexts/AuthContext';
 
 const Jobs: React.FC<{}> = () => {
   const [selectedJob, setSelectedJob] = useState<any>(null);
@@ -20,7 +20,7 @@ const Jobs: React.FC<{}> = () => {
   const [savedJobs, setSavedJobs] = useState<any[]>([]);
   const [viewingSavedJobs, setViewingSavedJobs] = useState<boolean>(false);
   const [appliedJobs, setAppliedJobs] = useState<any[]>([]);
-  const { uid } = useAuth(); // Use useAuth to get uid
+  const { uid } = useAuth();
 
   const uniqueLocations = [...new Set(jobs.map(job => job.location))];
 
@@ -47,6 +47,15 @@ const Jobs: React.FC<{}> = () => {
           const appliedJobIds = appliedData.map((job: any) => job.job_id);
           const filtered = data.filter((job: any) => !appliedJobIds.includes(job.job_id));
           setFilteredJobs(filtered);
+
+          const userResponse = await fetch(`https://resumegraderapi.onrender.com/users/${uid}`);
+          if (!userResponse.ok) {
+            throw new Error('Failed to fetch user data');
+          }
+          const userData = await userResponse.json();
+          const savedJobIds = userData.saved_jobs;
+          const savedJobsList = data.filter((job: any) => savedJobIds.includes(job.job_id));
+          setSavedJobs(savedJobsList);
         } else {
           setFilteredJobs(data);
         }
@@ -82,10 +91,30 @@ const Jobs: React.FC<{}> = () => {
     setApplyingJob(job);
   };
 
-  const handleSaveJob = (job: any) => {
+  const handleSaveJob = async (job: any) => {
     if (!savedJobs.some(savedJob => savedJob.job_id === job.job_id)) {
-      setSavedJobs([...savedJobs, job]);
-      window.alert(`You have saved the job: ${job.title}`);
+      try {
+        const response = await fetch('https://resumegraderapi.onrender.com/users/saved_jobs', {
+          method: 'POST',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            uid: uid,
+            job_id: job.job_id
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to save job');
+        }
+
+        setSavedJobs([...savedJobs, job]);
+        window.alert(`You have saved the job: ${job.title}`);
+      } catch (error) {
+        window.alert('Error saving job. Please try again later.');
+      }
     }
   };
 
@@ -138,7 +167,16 @@ const Jobs: React.FC<{}> = () => {
   }
 
   if (viewingSavedJobs) {
-    return <SavedJobsPage savedJobs={savedJobs} setViewingSavedJobs={setViewingSavedJobs} handleApply={handleApply} handleDeleteJob={handleDeleteJob} />;
+    console.log(savedJobs);
+    return (
+      <SavedJobsPage 
+        savedJobs={savedJobs} 
+        setViewingSavedJobs={setViewingSavedJobs} 
+        handleApply={handleApply} 
+        handleDeleteJob={handleDeleteJob} 
+        setSavedJobs={setSavedJobs} 
+      />
+    );
   }
 
   return (
@@ -202,15 +240,15 @@ const Jobs: React.FC<{}> = () => {
           </select>
         </div>
         {loading ? (
-          <div className="flex justify-center items-center">
-            <div className="loader">Loading...</div>
+          <div className="flex justify-center items-center min-h-[50vh]">
+            <div className="text-xl font-semibold text-gray-700">Loading jobs...</div>
           </div>
         ) : error ? (
-          <div className="text-red-500">{error}</div>
+          <div className="text-red-500 text-center w-full">{error}</div>
         ) : (
-          <div className="flex">
+          <div className="flex flex-wrap justify-between">
             <div className="w-2/5 p-4">
-              {currentJobs.length > 0 ? (
+              {filteredJobs.length > 0 ? (
                 currentJobs.map((job, index) => (
                   <div key={index} className="mb-4" onClick={() => setSelectedJob(job)}>
                     <JobCard

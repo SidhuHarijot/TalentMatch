@@ -35,6 +35,7 @@ const Jobs: React.FC<{}> = () => {
         }
         const data = await response.json();
         setJobs(data);
+        setFilteredJobs(data);
 
         if (uid) {
           const appliedResponse = await fetch(`https://resumegraderapi.onrender.com/matches/?uid=${uid}`);
@@ -44,10 +45,6 @@ const Jobs: React.FC<{}> = () => {
           const appliedData = await appliedResponse.json();
           setAppliedJobs(appliedData);
 
-          const appliedJobIds = appliedData.map((job: any) => job.job_id);
-          const filtered = data.filter((job: any) => !appliedJobIds.includes(job.job_id));
-          setFilteredJobs(filtered);
-
           const userResponse = await fetch(`https://resumegraderapi.onrender.com/users/${uid}`);
           if (!userResponse.ok) {
             throw new Error('Failed to fetch user data');
@@ -56,8 +53,6 @@ const Jobs: React.FC<{}> = () => {
           const savedJobIds = userData.saved_jobs;
           const savedJobsList = data.filter((job: any) => savedJobIds.includes(job.job_id));
           setSavedJobs(savedJobsList);
-        } else {
-          setFilteredJobs(data);
         }
       } catch (error) {
         setError('Error fetching jobs. Please try again later.');
@@ -162,12 +157,15 @@ const Jobs: React.FC<{}> = () => {
     }
   };
 
+  const isJobApplied = (jobId: string) => {
+    return appliedJobs.some(job => job.job_id === jobId);
+  };
+
   if (applyingJob) {
     return <ApplicationPage job={applyingJob} goBack={handleGoBack} navigateToProfile={() => {}} />;
   }
 
   if (viewingSavedJobs) {
-    console.log(savedJobs);
     return (
       <SavedJobsPage 
         savedJobs={savedJobs} 
@@ -259,6 +257,24 @@ const Jobs: React.FC<{}> = () => {
                       job_type={getJobTypeFullName(job.job_type)}
                       description={`${job.description.substring(0, 100)}...`}
                     />
+                    {isJobApplied(job.job_id) ? (
+                      <button
+                        disabled
+                        className="bg-gray-400 text-white rounded px-4 py-2 mt-2 mr-2"
+                      >
+                        Already Applied
+                      </button>
+                    ) : (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleApply(job);
+                        }}
+                        className="bg-blue-500 text-white rounded px-4 py-2 mt-2 mr-2"
+                      >
+                        Apply
+                      </button>
+                    )}
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -307,12 +323,21 @@ const Jobs: React.FC<{}> = () => {
                   <p className="text-gray-700 mb-2">
                     <strong>Description:</strong> {selectedJob.description}
                   </p>
-                  <button
-                    onClick={() => handleApply(selectedJob)}
-                    className="bg-blue-500 text-white rounded px-4 py-2 mt-2"
-                  >
-                    Apply
-                  </button>
+                  {isJobApplied(selectedJob.job_id) ? (
+                    <button
+                      disabled
+                      className="bg-gray-400 text-white rounded px-4 py-2 mt-2 mr-2"
+                    >
+                      Already Applied
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handleApply(selectedJob)}
+                      className="bg-blue-500 text-white rounded px-4 py-2 mt-2 mr-2"
+                    >
+                      Apply
+                    </button>
+                  )}
                   <button
                     onClick={() => setSelectedJob(null)}
                     className="bg-gray-500 text-white rounded px-4 py-2 mt-2 ml-2"

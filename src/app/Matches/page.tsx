@@ -45,10 +45,10 @@ const MatchesPage: React.FC = () => {
     fetchJobs();
   }, [uid]);
 
-  const handleMatchClick = async (matchId: string) => {
+  const handleMatchClick = async (matchId: string, match_uid: string) => {
     setSelectedMatchId(matchId); // Store selected match's uid
     try {
-      const response = await fetch(`https://resumegraderapi.onrender.com/resumes/${uid}`);
+      const response = await fetch(`https://resumegraderapi.onrender.com/resumes/${match_uid}`);
       if (!response.ok) {
         throw new Error('Failed to fetch resume details');
       }
@@ -254,7 +254,7 @@ const MatchesPage: React.FC = () => {
                     <h3 className="text-lg text-black font-bold mb-2">Match Details:</h3>
                     {matchDetails.map((match:any) => (
                       <div key={match.match_id} className={`mb-2 text-black border border-solid ${selectedMatchId === match.match_id ? 'border-2 border-blue-300 bg-blue-100' : 'border-stone-100 hover:bg-blue-200'} shadow-md rounded-md p-2`}>
-                        <div onClick={() => handleMatchClick(match.match_id)} className='cursor-pointer'>
+                        <div onClick={() => handleMatchClick(match.match_id, match.uid)} className='cursor-pointer'>
                           <div className='float-right text-blue-700'>
                             <p><strong>{match.grade}</strong></p>
                           </div>

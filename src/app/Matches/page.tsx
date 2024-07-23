@@ -19,6 +19,8 @@ const MatchesPage: React.FC = () => {
   const [appliedJobs, setAppliedJobs] = useState<any[]>([]);
   const { uid } = useAuth(); // Use useAuth to get uid
   const [matchDetails, setMatchDetails] = useState<any[]>([]);
+  const [selectedMatchId, setSelectedMatchId] = useState<string | null>(null);
+  const [resumeDetails, setResumeDetails] = useState<any | null>(null);
   const uniqueLocations = jobs.map(job => job.location).filter((location, index, array) => array.indexOf(location) === index);
 
   useEffect(() => {
@@ -42,6 +44,41 @@ const MatchesPage: React.FC = () => {
 
     fetchJobs();
   }, [uid]);
+
+  const handleMatchClick = async (matchId: string) => {
+    setSelectedMatchId(matchId); // Store selected match's uid
+    try {
+      const response = await fetch(`https://resumegraderapi.onrender.com/resumes/${uid}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch resume details');
+      }
+      const data = await response.json();
+      setResumeDetails(data); // Store fetched resume details
+    } catch (error) {
+      console.error('Error fetching resume details:', error);
+    }
+  };
+  
+  const renderResumeDetails = () => {
+    if (!resumeDetails) return null; // Do not render if no resume details are available
+    return (
+      <div className="mt-2">
+        <h3 className="font-semibold">Resume Details:</h3>
+        <p>Skills: {resumeDetails.skills.join(', ')}</p>
+        <div className="mt-2">
+          <h2 className="font-semibold" >Experience:</h2>
+          {resumeDetails.experience.map((exp: any, index: number) => (
+            <div key={index}>
+              <p>Title: {exp.title}</p>
+              <p>Company: {exp.company_name}</p>
+              {/* Display other experience details */}
+            </div>
+          ))}
+        </div>
+        {/* Render education and other sections similarly */}
+      </div>
+    );
+  };
 
   const fetchMatchDetails = async (jobId: string) => {
     try {
@@ -210,21 +247,25 @@ const MatchesPage: React.FC = () => {
             <div className="w-3/5 p-4">
               {selectedJob ? (
               <div className="bg-white p-6 rounded shadow-md">
-                <h2 className="text-xl font-bold mb-2 text-gray-800">{selectedJob.title}</h2>
+                <h2 className="text-2xl font-bold mb-2 text-gray-800">{selectedJob.title}</h2>
                 {/* Other job details */}
                 {matchDetails && matchDetails.length > 0 ? (
                   <div className='mt-3'>
                     <h3 className="text-lg text-black font-bold mb-2">Match Details:</h3>
                     {matchDetails.map((match:any) => (
-                      <div key={match.match_id} className="mb-2 text-black border border-solid border-stone-100 shadow-md rounded-md p-2">
-                        <div className='float-right text-blue-700'>
-                          <p><strong>{match.grade}</strong></p>
+                      <div key={match.match_id} className={`mb-2 text-black border border-solid ${selectedMatchId === match.match_id ? 'border-2 border-blue-300 bg-blue-100' : 'border-stone-100 hover:bg-blue-200'} shadow-md rounded-md p-2`}>
+                        <div onClick={() => handleMatchClick(match.match_id)} className='cursor-pointer'>
+                          <div className='float-right text-blue-700'>
+                            <p><strong>{match.grade}</strong></p>
+                          </div>
+                          <p><strong>Match ID:</strong> {match.match_id}</p>
+                          <p><strong>Status:</strong> {match.status}</p>
+                          <p><strong>Applicant:</strong> {match.user.name.first_name} {match.user.name.last_name}</p>
                         </div>
-                        <p><strong>Match ID:</strong> {match.match_id}</p>
-                        <p><strong>Status:</strong> {match.status}</p>
-                        <p><strong>Applicant:</strong> {match.user.name.first_name} {match.user.name.last_name}</p>
+                        {selectedMatchId === match.match_id && renderResumeDetails()}
                       </div>
                     ))}
+                    {/* {renderResumeDetails()} */}
                   </div>
                 ) : (
                   <p>No match details found.</p>

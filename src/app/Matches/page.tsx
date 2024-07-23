@@ -45,6 +45,29 @@ const MatchesPage: React.FC = () => {
     fetchJobs();
   }, [uid]);
 
+  const connectWebSocket = () => {
+    if (!selectedJob) {
+      alert('Please select a job to grade.');
+      return;
+    }
+
+    const ws = new WebSocket(`https://resumegraderapi.onrender.com/grade/job/real-time/${selectedJob.job_id}?auth_uid=${uid}`);
+
+    ws.onopen = () => {
+      console.log('WebSocket connection established');
+    };
+
+    ws.onclose = () => {
+      console.log('WebSocket connection closed');
+    };
+
+    ws.onerror = (error) => {
+      console.error('WebSocket error:', error);
+    };
+
+    fetchMatchDetails(selectedJob.job_id);
+  };
+
   const handleMatchClick = async (matchId: string, match_uid: string) => {
     setSelectedMatchId(matchId); // Store selected match's uid
     try {
@@ -248,6 +271,12 @@ const MatchesPage: React.FC = () => {
               {selectedJob ? (
               <div className="bg-white p-6 rounded shadow-md">
                 <h2 className="text-2xl font-bold mb-2 text-gray-800">{selectedJob.title}</h2>
+                <button
+                  onClick={connectWebSocket}
+                  className="float-right bg-blue-500 text-black rounded px-2 py-1 hover:bg-cyan-600 hover:text-white"
+                >
+                  Start Grading
+                </button>
                 {/* Other job details */}
                 {matchDetails && matchDetails.length > 0 ? (
                   <div className='mt-3'>

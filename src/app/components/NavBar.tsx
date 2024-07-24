@@ -56,9 +56,6 @@ const NavBar: React.FC<NavBarProps> = ({ links }) => {
                   Sign Out
                 </span>
               </Link>
-              <button onClick={handleRoleSwitch} className="text-lg text-black bg-gray-200 p-2 rounded">
-            {role === 'admin' ? 'Switch to User' : 'Switch to Admin'}
-          </button>
               </>
           ) : (
             <>
@@ -67,9 +64,6 @@ const NavBar: React.FC<NavBarProps> = ({ links }) => {
                 Sign In
               </span>
             </Link>
-            <button onClick={handleRoleSwitch} className="text-lg text-black bg-gray-200 p-2 rounded">
-            {role === 'admin' ? 'Switch to User' : 'Switch to Admin'}
-          </button>
           </>
           )}
         </div>

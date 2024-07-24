@@ -59,6 +59,7 @@ const MatchesPage: React.FC = () => {
 
     ws.onclose = () => {
       console.log('WebSocket connection closed');
+      alert('Grading completed. Please refresh the page to view updated match details.');
     };
 
     ws.onerror = (error) => {

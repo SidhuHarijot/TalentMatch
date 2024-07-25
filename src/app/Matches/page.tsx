@@ -103,20 +103,35 @@ const MatchesPage: React.FC = () => {
 
     const ws = new WebSocket(`https://resumegraderapi.onrender.com/grade/job/real-time/${selectedJob.job_id}?auth_uid=${uid}`);
 
-    ws.onopen = () => {
-      console.log('WebSocket connection established');
-    };
-
-    ws.onclose = () => {
-      console.log('WebSocket connection closed');
-      alert('Grading completed. Please refresh the page to view updated match details.');
+    ws.onmessage = (event) => {
+      console.log('WebSocket message received:', event.data);
+      updateMatchDetails(event.data);
     };
 
     ws.onerror = (error) => {
       console.error('WebSocket error:', error);
     };
+    
+  };
 
-    fetchMatchDetails(selectedJob.job_id);
+  const updateMatchDetails = (data: string) => {
+    const parsedData = JSON.parse(data);
+  
+    const updateDetails = (match: any) => {
+      setMatchDetails(prevDetails => 
+        prevDetails.map(detail => 
+          detail.match_id === match.match_id 
+            ? { ...detail, status: match.status, status_code: match.status_code, grade: match.grade } 
+            : detail
+        )
+      );
+    };
+  
+    if (Array.isArray(parsedData)) {
+      parsedData.forEach(updateDetails);
+    } else {
+      updateDetails(parsedData);
+    }
   };
 
   const handleMatchClick = async (matchId: string, match_uid: string) => {
@@ -163,7 +178,14 @@ const MatchesPage: React.FC = () => {
       }
       const matchDetails = await response.json();
       console.log('Match details:', matchDetails); // For testing purposes
-      setMatchDetails(matchDetails);
+      // Sort match details by grade
+      const sortedMatchDetails = matchDetails.sort((a: any, b: any) => {
+        if (a.grade < b.grade) return 1;
+        if (a.grade > b.grade) return -1;
+        return 0;
+      });
+
+      setMatchDetails(sortedMatchDetails);
     } catch (error) {
       console.error('Error fetching match details:', error);
     }
@@ -328,7 +350,6 @@ const MatchesPage: React.FC = () => {
                 >
                   Start Grading
                 </button>
-                {/* Other job details */}
                 {matchDetails && matchDetails.length > 0 ? (
                   <div className='mt-3'>
                     <h3 className="text-lg text-black font-bold mb-2">Match Details:</h3>

@@ -85,6 +85,7 @@ const MatchesPage: React.FC = () => {
 
         if (response.ok) {
           console.log('Status updated successfully');
+          fetchMatchDetails(selectedJob.job_id);
           alert('Status updated successfully');
         } else {
           console.error('Failed to update status');
@@ -354,13 +355,13 @@ const MatchesPage: React.FC = () => {
                   <div className='mt-3'>
                     <h3 className="text-lg text-black font-bold mb-2">Match Details:</h3>
                     {matchDetails.map((match:any) => (
-                      <div key={match.match_id} className={`mb-2 text-black border border-solid ${selectedMatchId === match.match_id ? 'border-2 border-blue-300 bg-blue-100' : 'border-stone-100 hover:bg-blue-200'} shadow-md rounded-md p-2`}>
+                      <div key={match.match_id} className={`mb-2 text-black border border-solid ${selectedMatchId === match.match_id ? 'border-2 border-blue-300 bg-blue-100' : 'border-stone-100 hover:bg-blue-200'} shadow-md rounded-md p-4`}>
                         <div onClick={() => handleMatchClick(match.match_id, match.uid)} className='cursor-pointer'>
-                          <div className='float-right text-right text-blue-700'>
+                          <div className='float-right text-right text-blue-700 ml-2'>
                             <p><strong>{match.grade}</strong></p>
                             <button onClick={handleButtonClick}>Update Status</button>
                             {selectedMatchId === match.match_id && (
-                              <div className="border border-solid border-blue-500 rounded-sm p-2">
+                              <div className="border border-solid border-blue-500 rounded-md my-1 ml-1 p-1">
                                 <ul className='text-black text-sm'>
                                 <li
                                     onClick={() => handleStatusSelect('SHORTLISTED', 701)}
@@ -381,7 +382,7 @@ const MatchesPage: React.FC = () => {
                                     CONTACTED
                                   </li>
                                 </ul>
-                                <button onClick={handleSubmit} className='mt-3 hover:bg-blue-500 hover:text-white rounded-sm'>Submit</button>
+                                <button onClick={handleSubmit} className='mt-3 p-1 hover:bg-blue-500 hover:text-white rounded-md'>Submit</button>
                               </div>
                             )}
                           </div>

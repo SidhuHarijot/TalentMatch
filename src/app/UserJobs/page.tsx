@@ -89,8 +89,7 @@ const Jobs: React.FC<{}> = () => {
       return;
     }
     setApplyingJob(job);
-
-    // Original functionality to handle applying job
+    
     try {
       const response = await fetch('https://resumegraderapi.onrender.com/matches/', {
         method: 'POST',
@@ -109,7 +108,6 @@ const Jobs: React.FC<{}> = () => {
       }
 
       setAppliedJobs([...appliedJobs, job]);
-      window.alert(`You have applied for the job: ${job.title}`);
     } catch (error) {
       window.alert('Error applying for job. Please try again later.');
     }
@@ -207,6 +205,7 @@ const Jobs: React.FC<{}> = () => {
         handleApply={handleApply} 
         handleDeleteJob={handleDeleteJob} 
         setSavedJobs={setSavedJobs} 
+        appliedJobs={appliedJobs}
       />
     );
   }

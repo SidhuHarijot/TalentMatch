@@ -425,7 +425,7 @@ const MatchesPage: React.FC = () => {
                                         Feedback
                                       </li>                                    
                                     </ul>
-                                    <button onClick={handleSubmit} className='mt-3 p-1 hover:bg-blue-500 hover:text-white rounded-md'>Submit</button>
+                                    <button onClick={handleSubmit} className='my-1 hover:bg-blue-500 hover:text-white rounded-md'>Submit</button>
                                   </div>
                                 </div>
                               )}

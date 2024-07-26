@@ -56,6 +56,36 @@ const MatchesPage: React.FC = () => {
     fetchJobs();
   }, [uid]);
 
+  const handleFeedback = async () => {
+    const feedbackText = window.prompt("Please enter your feedback:");
+    if (feedbackText) {
+      const data = {
+        match_id: selectedMatchId,
+        feedback_text: feedbackText,
+        auth_uid: uid
+      };
+  
+      try {
+        const response = await fetch('https://resumegraderapi.onrender.com/feedback/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(data)
+        });
+  
+        if (response.ok) {
+          console.log('Feedback submitted successfully');
+          alert('Feedback submitted successfully');
+        } else {
+          console.error('Failed to submit feedback');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    }
+  };
+
   const handleButtonClick = (matchId: any) => {
     setSelectedMatchId(matchId === selectedMatchId ? null : matchId);
     setSelectedOption(null);
@@ -365,30 +395,38 @@ const MatchesPage: React.FC = () => {
                           <div onClick={() => handleMatchClick(match.match_id, match.uid)} className='cursor-pointer'>
                             <div className='float-right text-right text-blue-700 ml-2'>
                               <p><strong>{match.grade}</strong></p>
-                              <button onClick={handleButtonClick}>Update Status</button>
                               {selectedMatchId === match.match_id && (
-                                <div className="border border-solid border-blue-500 rounded-md my-1 ml-1 p-1">
-                                  <ul className='text-black text-sm'>
-                                  <li
-                                      onClick={() => handleStatusSelect('SHORTLISTED', 701)}
-                                      className={`cursor-pointer ${selectedOption === 'SHORTLISTED' ? 'font-bold text-blue-500' : ''}`}
-                                    >
-                                      SHORTLISTED
-                                    </li>
+                                <div>
+                                  <button onClick={handleButtonClick}>Update Status</button>
+                                  <div className="border border-solid border-blue-500 rounded-md my-1 ml-1 p-1">
+                                    <ul className='text-black text-sm'>
                                     <li
-                                      onClick={() => handleStatusSelect('SELECTED', 710)}
-                                      className={`cursor-pointer ${selectedOption === 'SELECTED' ? 'font-bold text-blue-500' : ''}`}
-                                    >
-                                      SELECTED
-                                    </li>
-                                    <li
-                                      onClick={() => handleStatusSelect('CONTACTED', 720)}
-                                      className={`cursor-pointer ${selectedOption === 'CONTACTED' ? 'font-bold text-blue-500' : ''}`}
-                                    >
-                                      CONTACTED
-                                    </li>
-                                  </ul>
-                                  <button onClick={handleSubmit} className='mt-3 p-1 hover:bg-blue-500 hover:text-white rounded-md'>Submit</button>
+                                        onClick={() => handleStatusSelect('Shortlisted', 701)}
+                                        className={`cursor-pointer ${selectedOption === 'Shortlisted' ? 'font-bold text-blue-500' : ''}`}
+                                      >
+                                        Shortlisted
+                                      </li>
+                                      <li
+                                        onClick={() => handleStatusSelect('Selected', 710)}
+                                        className={`cursor-pointer ${selectedOption === 'Selected' ? 'font-bold text-blue-500' : ''}`}
+                                      >
+                                        Selected
+                                      </li>
+                                      <li
+                                        onClick={() => handleStatusSelect('Contacted', 720)}
+                                        className={`cursor-pointer ${selectedOption === 'Contacted' ? 'font-bold text-blue-500' : ''}`}
+                                      >
+                                        Contacted
+                                      </li>
+                                      <li
+                                        onClick={() => handleFeedback()}
+                                        className="cursor-pointer"
+                                      >
+                                        Feedback
+                                      </li>                                    
+                                    </ul>
+                                    <button onClick={handleSubmit} className='mt-3 p-1 hover:bg-blue-500 hover:text-white rounded-md'>Submit</button>
+                                  </div>
                                 </div>
                               )}
                             </div>

@@ -399,7 +399,7 @@ const MatchesPage: React.FC = () => {
                   <h2 className="text-2xl font-bold mb-2 text-gray-800">{selectedJob.title}</h2>
                   <button
                     onClick={connectWebSocket}
-                    className="float-right bg-blue-500 text-white rounded px-2 py-1 hover:bg-green-500 hover:text-white"
+                    className="float-right bg-blue-500 text-white rounded px-2 py-1 hover:bg-green-500 hover:text-white transform transition-transform duration-300 hover:scale-105 hover:rotate-3"
                   >
                     Start Grading
                   </button>
@@ -441,7 +441,7 @@ const MatchesPage: React.FC = () => {
                                         Feedback
                                       </li>                                    
                                     </ul>
-                                    <button onClick={handleSubmit} className='px-1 text-sm hover:bg-blue-500 hover:text-white rounded-md'>Submit</button>
+                                    <button onClick={handleSubmit} className='px-1 text-sm hover:bg-blue-500 hover:text-white rounded-md transform transition-transform duration-300 hover:scale-105 hover:rotate-3'>Submit</button>
                                   </div>
                                 </div>
                               )}

@@ -22,6 +22,7 @@ const Jobs: React.FC<{}> = () => {
   const [viewingSavedJobs, setViewingSavedJobs] = useState<boolean>(false);
   const [appliedJobs, setAppliedJobs] = useState<any[]>([]);
   const { uid } = useAuth();
+  const [jobStatus, setJobStatus] = useState<string>('all');
 
   const uniqueLocations = [...new Set(jobs.map(job => job.location))];
 
@@ -65,15 +66,28 @@ const Jobs: React.FC<{}> = () => {
     fetchJobs();
   }, [uid]);
 
+  useEffect(() => {
+    handleSearch();
+  }, [jobStatus]);
+  
+
   const handleSearch = () => {
-    const filtered = jobs.filter(job => (
+    let filtered = jobs.filter(job => (
       job.title.toLowerCase().includes(jobTitle.toLowerCase()) &&
       job.location.toLowerCase().includes(location.toLowerCase()) &&
       (jobType === '' || job.type === jobType)
     ));
+  
+    if (jobStatus === 'applied') {
+      filtered = filtered.filter(job => isJobApplied(job.job_id));
+    } else if (jobStatus === 'available') {
+      filtered = filtered.filter(job => !isJobApplied(job.job_id));
+    }
+  
     setFilteredJobs(filtered);
     setCurrentPage(1);
   };
+  
 
   const sortBySalary = (order: string) => {
     const sorted = [...filteredJobs].sort((a, b) => (
@@ -138,9 +152,10 @@ const Jobs: React.FC<{}> = () => {
     setJobTitle('');
     setLocation('');
     setJobType('');
+    setJobStatus('all');
     setFilteredJobs(jobs);
     setCurrentPage(1);
-  };
+  };  
 
   const indexOfLastJob = currentPage * jobsPerPage;
   const indexOfFirstJob = indexOfLastJob - jobsPerPage;
@@ -201,56 +216,67 @@ const Jobs: React.FC<{}> = () => {
           View Saved Jobs
         </button>
         <div className="flex flex-wrap justify-between items-center mb-6 space-y-4 md:space-y-0">
-          <input
-            type="text"
-            placeholder="Job Title"
-            className="border border-gray-300 rounded p-2 text-gray-700 flex-grow"
-            value={jobTitle}
-            onChange={(e) => setJobTitle(e.target.value)}
-            onKeyPress={handleKeyPress}
-          />
-          <select
-            className="border border-gray-300 rounded p-2 text-gray-700 flex-grow mx-2"
-            value={location}
-            onChange={(e) => setLocation(e.target.value)}
-          >
-            <option value="">Select Location</option>
-            {uniqueLocations.map((loc, index) => (
-              <option key={index} value={loc}>{loc}</option>
-            ))}
-          </select>
-          <select
-            className="border border-gray-300 rounded p-2 text-gray-700 flex-grow"
-            value={jobType}
-            onChange={(e) => setJobType(e.target.value)}
-          >
-            <option value="">Select Type</option>
-            <option value="FULL">Full-time</option>
-            <option value="PART">Part-time</option>
-            <option value="CONT">Contract</option>
-            <option value="UNKN">Unknown</option>
-          </select>
+        <input
+          type="text"
+          placeholder="Job Title"
+          className="border border-gray-300 rounded p-2 text-gray-700 flex-grow"
+          value={jobTitle}
+          onChange={(e) => setJobTitle(e.target.value)}
+          onKeyPress={handleKeyPress}
+        />
+        <select
+          className="border border-gray-300 rounded p-2 text-gray-700 flex-grow mx-1"
+          value={location}
+          onChange={(e) => setLocation(e.target.value)}
+        >
+          <option value="">Select Location</option>
+          {uniqueLocations.map((loc, index) => (
+            <option key={index} value={loc}>{loc}</option>
+          ))}
+        </select>
+        <select
+          className="border border-gray-300 rounded p-2 text-gray-700 flex-grow"
+          value={jobType}
+          onChange={(e) => setJobType(e.target.value)}
+        >
+          <option value="">Select Type</option>
+          <option value="FULL">Full-time</option>
+          <option value="PART">Part-time</option>
+          <option value="CONT">Contract</option>
+          <option value="UNKN">Unknown</option>
+        </select>
+        <div className="flex space-x-2">
           <button
             onClick={handleSearch}
-            className="bg-blue-500 text-white rounded px-4 py-2 mx-2"
+            className="bg-blue-500 text-white rounded px-4 py-2 ml-1"
           >
             Search
           </button>
           <button
             onClick={clearFilters}
-            className="bg-gray-500 text-white rounded px-4 py-2"
+            className="bg-gray-500 text-white rounded px-4 mr-1"
           >
             Clear Filters
           </button>
-          <select
-            className="border border-gray-300 rounded p-2 text-gray-700 flex-grow ml-2"
-            value={sortOrder}
-            onChange={(e) => sortBySalary(e.target.value)}
-          >
-            <option value="lowToHigh">Sort by Salary: Low to High</option>
-            <option value="highToLow">Sort by Salary: High to Low</option>
-          </select>
         </div>
+        <select
+          className="border border-gray-300 rounded p-2 text-gray-700 flex-grow mx-1"
+          value={sortOrder}
+          onChange={(e) => sortBySalary(e.target.value)}
+        >
+          <option value="lowToHigh">Sort by Salary: Low to High</option>
+          <option value="highToLow">Sort by Salary: High to Low</option>
+        </select>
+        <select
+          className="border border-gray-300 rounded p-2 text-gray-700"
+          value={jobStatus}
+          onChange={(e) => setJobStatus(e.target.value)}
+        >
+          <option value="all">All Jobs</option>
+          <option value="applied">Applied Jobs</option>
+          <option value="available">Available Jobs</option>
+        </select>
+      </div>
         {loading ? (
           <div className="flex justify-center items-center min-h-[50vh]">
             <div className="text-xl font-semibold text-gray-700">Loading jobs...</div>

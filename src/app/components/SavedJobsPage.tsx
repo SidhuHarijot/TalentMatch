@@ -98,7 +98,7 @@ const SavedJobsPage: React.FC<SavedJobsPageProps> = ({
                       disabled
                       className="bg-gray-400 text-white rounded px-4 py-2 w-5/12"
                     >
-                      Already Applied
+                      Applied
                     </button>
                   ) : (
                     <button

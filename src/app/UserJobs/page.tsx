@@ -89,28 +89,6 @@ const Jobs: React.FC<{}> = () => {
       return;
     }
     setApplyingJob(job);
-    
-    try {
-      const response = await fetch('https://resumegraderapi.onrender.com/matches/', {
-        method: 'POST',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          uid: uid,
-          job_id: job.job_id
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to apply for job');
-      }
-
-      setAppliedJobs([...appliedJobs, job]);
-    } catch (error) {
-      window.alert('Error applying for job. Please try again later.');
-    }
   };
 
   const handleSaveJob = async (job: any) => {
@@ -194,7 +172,9 @@ const Jobs: React.FC<{}> = () => {
   };
 
   if (applyingJob) {
-    return <ApplicationPage job={applyingJob} goBack={handleGoBack} navigateToProfile={() => {}} />;
+    return <ApplicationPage job={applyingJob} goBack={handleGoBack} navigateToProfile={() => { } } setAppliedJobs={function (value: React.SetStateAction<any[]>): void {
+      throw new Error('Function not implemented.');
+    } } appliedJobs={[]} />;
   }
 
   if (viewingSavedJobs) {
@@ -296,7 +276,7 @@ const Jobs: React.FC<{}> = () => {
                         disabled
                         className="bg-gray-400 text-white rounded px-4 py-2 mt-2 mr-2"
                       >
-                        Already Applied
+                      Applied
                       </button>
                     ) : (
                       uid ? (

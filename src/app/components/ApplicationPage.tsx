@@ -19,8 +19,9 @@ const ApplicationPage: React.FC<ApplicationPageProps> = ({ job, goBack, navigate
   const [coverLetter, setCoverLetter] = useState("");
   const [resumeTitle, setResumeTitle] = useState(""); 
   const [skills, setSkills] = useState([]);
+  const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
   const { uid } = useAuth();
-  
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -57,23 +58,29 @@ const ApplicationPage: React.FC<ApplicationPageProps> = ({ job, goBack, navigate
         body: JSON.stringify({
           uid: uid,
           job_id: job.job_id,
-          selected_skills: skills
+          selected_skills: selectedSkills
         })
       });
-  
+
       if (!response.ok) {
         const errorData = await response.json();
         console.error('Error response:', errorData);
         throw new Error(`Failed to apply for job: ${errorData.message}`);
       }
-  
+
       const result = await response.json();
       console.log('Match created successfully:', result);
-  
+
     } catch (error) {
       console.error('Error applying for job:', error);
       window.alert(`Error applying for job. Please try again later. ${error.message}`);
     }
+  };
+
+  const handleSkillClick = (skill: string) => {
+    setSelectedSkills(prev => 
+      prev.includes(skill) ? prev.filter(s => s !== skill) : [...prev, skill]
+    );
   };
 
   const handleSubmitClick = async () => {
@@ -136,6 +143,20 @@ const ApplicationPage: React.FC<ApplicationPageProps> = ({ job, goBack, navigate
                   <li key={index} className="mb-2 bg-gray-100 rounded-md p-2 shadow-sm">{skill}</li>
                 ))}
               </ul>
+            </div>
+            <div className="mb-6">
+              <h2 className="text-lg font-bold text-gray-800 mb-4">Required Skills:</h2>
+              <div className="flex flex-wrap gap-2">
+                {job.required_skills.map((skill: string, index: number) => (
+                  <button
+                    key={index}
+                    onClick={() => handleSkillClick(skill)}
+                    className={`px-4 py-2 rounded ${selectedSkills.includes(skill) ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'}`}
+                  >
+                    {skill}
+                  </button>
+                ))}
+              </div>
             </div>
             <div className="mb-6">
               <h2 className="text-lg font-bold text-gray-800 mb-4">Cover Letter</h2>

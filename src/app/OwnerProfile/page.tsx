@@ -9,9 +9,12 @@ const OwnerProfile: React.FC = () => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [dateOfBirth, setDateOfBirth] = useState('');
   const [email, setEmail] = useState('');
-  const [targetUid, setTargetUid] = useState<string>('');
+  const [searchEmail, setSearchEmail] = useState<string>('');
+  const [userList, setUserList] = useState<any[]>([]);
+  const [selectedUser, setSelectedUser] = useState<any>(null);
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [isOwner, setIsOwner] = useState<boolean>(false);
+  const [currentRole, setCurrentRole] = useState<string>('');
   const [message, setMessage] = useState<string>('');
   const [successMessage, setSuccessMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -26,14 +29,55 @@ const OwnerProfile: React.FC = () => {
     }
   }, [user]);
 
-  const handleUpdatePrivileges = async () => {
-    if (isAdmin && isOwner) {
-      setMessage('A user cannot be both Admin and Owner.');
-      return;
+  const fetchAllUsers = async () => {
+    try {
+      const response = await fetch(`https://resumegraderapi.onrender.com/users?auth_uid=${uid}`);
+      if (response.ok) {
+        const data = await response.json();
+        setUserList(data);
+      } else {
+        console.error('Failed to fetch users.');
+      }
+    } catch (error) {
+      console.error('Error fetching users:', error);
     }
+  };
 
+  const fetchUserPrivileges = async (userUid: string) => {
+    try {
+      const response = await fetch(`https://resumegraderapi.onrender.com/users/privileges/${userUid}`);
+      if (response.ok) {
+        const role = await response.json();
+        setCurrentRole(role);
+        setIsAdmin(role === 'admin');
+        setIsOwner(role === 'owner');
+      } else {
+        console.error('Failed to fetch user privileges.');
+      }
+    } catch (error) {
+      console.error('Error fetching user privileges:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchAllUsers();
+  }, []);
+
+  const handleSearchUser = () => {
+    const user = userList.find((u) => u.email === searchEmail);
+    if (user) {
+      setSelectedUser(user);
+      fetchUserPrivileges(user.uid);
+      setMessage('');
+    } else {
+      setSelectedUser(null);
+      setMessage('User not found.');
+    }
+  };
+
+  const handleUpdatePrivileges = async () => {
     const privilegesData = {
-      target_uid: targetUid,
+      target_uid: selectedUser.uid,
       is_admin: isAdmin,
       is_owner: isOwner,
       auth_uid: uid,
@@ -50,6 +94,7 @@ const OwnerProfile: React.FC = () => {
 
       if (response.ok) {
         setMessage('User privileges updated successfully.');
+        setCurrentRole(isAdmin ? 'admin' : isOwner ? 'owner' : 'user');
       } else {
         setMessage('Failed to update user privileges.');
         console.error('Error updating privileges:', response.statusText);
@@ -100,7 +145,8 @@ const OwnerProfile: React.FC = () => {
     setPhoneNumber('');
     setDateOfBirth('');
     setEmail('');
-    setTargetUid('');
+    setSearchEmail('');
+    setSelectedUser(null);
     setIsAdmin(false);
     setIsOwner(false);
     setMessage('');
@@ -181,46 +227,61 @@ const OwnerProfile: React.FC = () => {
       <div className="p-6 rounded-lg shadow-lg bg-white mt-8">
         <h1 className="text-2xl font-bold mb-4">Update User Privileges</h1>
         <div className="mb-4">
-          <label className="block text-gray-700 font-bold mb-2">Target User ID:</label>
+          <label className="block text-gray-700 font-bold mb-2">User Email:</label>
           <input
-            type="text"
+            type="email"
             className="border border-gray-300 rounded p-2 w-full text-black"
-            value={targetUid}
-            onChange={(e) => setTargetUid(e.target.value)}
+            value={searchEmail}
+            onChange={(e) => setSearchEmail(e.target.value)}
           />
+          <button
+            className="bg-blue-500 text-white rounded px-4 py-2 mt-2"
+            onClick={handleSearchUser}
+          >
+            Search User
+          </button>
         </div>
-        <div className="mb-4">
-          <label className="block text-gray-700 font-bold mb-2">Make Admin:</label>
-          <input
-            type="radio"
-            name="role"
-            className="mr-2"
-            checked={isAdmin}
-            onChange={() => {
-              setIsAdmin(true);
-              setIsOwner(false);
-            }}
-          />
-        </div>
-        <div className="mb-4">
-          <label className="block text-gray-700 font-bold mb-2">Make Owner:</label>
-          <input
-            type="radio"
-            name="role"
-            className="mr-2"
-            checked={isOwner}
-            onChange={() => {
-              setIsAdmin(false);
-              setIsOwner(true);
-            }}
-          />
-        </div>
-        <button
-          className="bg-blue-500 text-white rounded px-4 py-2"
-          onClick={handleUpdatePrivileges}
-        >
-          Update Privileges
-        </button>
+        {selectedUser && (
+          <div>
+            <h2 className="text-xl font-bold mb-2 text-black ">User Details</h2>
+            <p className="text-black mb-1"><strong>First Name:</strong> {selectedUser.name.first_name}</p>
+            <p className="text-black mb-1"><strong>Last Name:</strong> {selectedUser.name.last_name}</p>
+            <div className="mb-4">
+              <label className="block text-gray-700 font-bold mb-2">Current Role:</label>
+              <p className="text-black">{currentRole}</p>
+            </div>
+            <div className="mb-4">
+              <label className="block text-gray-700 font-bold mb-2">Make Admin:</label>
+              <input
+                type="checkbox"
+                className="mr-2"
+                checked={isAdmin}
+                onChange={() => {
+                  setIsAdmin(!isAdmin);
+                  setIsOwner(isOwner && !isAdmin ? false : isOwner);
+                }}
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-gray-700 font-bold mb-2">Make Owner:</label>
+              <input
+                type="checkbox"
+                className="mr-2"
+                checked={isOwner}
+                onChange={() => {
+                  setIsOwner(!isOwner);
+                  setIsAdmin(isAdmin && !isOwner ? false : isAdmin);
+                }}
+              />
+            </div>
+            <button
+              className="bg-blue-500 text-white rounded px-4 py-2"
+              onClick={handleUpdatePrivileges}
+            >
+              Update Privileges
+            </button>
+          </div>
+        )}
         {message && (
           <div className="mt-4 text-center text-red-500">
             {message}

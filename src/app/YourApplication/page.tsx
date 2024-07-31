@@ -20,10 +20,9 @@ interface Feedback {
 const YourApplications: React.FC = () => {
   const [appliedJobs, setAppliedJobs] = useState<AppliedJob[]>([]);
   const [selectedJob, setSelectedJob] = useState<null | AppliedJob>(null);
+  const [feedback, setFeedback] = useState<Feedback[] | null>(null);
   const [filter, setFilter] = useState<string>('All');
-  const [feedback, setFeedback] = useState<Feedback[]>([]);
-  const [showFeedback, setShowFeedback] = useState<number | null>(null);
-
+  
   const { uid } = useAuth();
 
   useEffect(() => {
@@ -51,6 +50,18 @@ const YourApplications: React.FC = () => {
     }
   }, [uid]);
 
+  const fetchFeedback = async (match_id: number) => {
+    try {
+      const response = await fetch(`https://resumegraderapi.onrender.com/feedback/?match_id=${match_id}&all_feedback=false`);
+      const data = await response.json();
+      setFeedback(data);
+      console.log('Feedback fetched:', data);
+    } catch (error) {
+      console.error('Error fetching feedback:', error);
+      setFeedback(null);
+    }
+  };
+
   const handleWithdraw = async (match_id: number, index: number) => {
     if (confirm('Are you sure you want to withdraw your application?')) {
       try {
@@ -72,27 +83,9 @@ const YourApplications: React.FC = () => {
     }
   };
 
-  const handleJobClick = (job: AppliedJob) => {
+  const handleJobClick = async (job: AppliedJob) => {
     setSelectedJob(job);
-    setShowFeedback(null);
-  };
-
-  const handleViewFeedback = async (match_id: number) => {
-    try {
-      const response = await fetch(`https://resumegraderapi.onrender.com/feedback/?match_id=${match_id}&all_feedback=false`);
-      const data = await response.json();
-      console.log('Feedback fetched:', data);
-
-      if (data.length === 0) {
-        setFeedback([]);
-      } else {
-        setFeedback(data);
-      }
-      
-      setShowFeedback(match_id);
-    } catch (error) {
-      console.error('Error fetching feedback:', error);
-    }
+    await fetchFeedback(job.match_id);
   };
 
   const filteredJobs = filter === 'All' ? appliedJobs : appliedJobs.filter(job => job.status === filter);
@@ -124,53 +117,42 @@ const YourApplications: React.FC = () => {
             <div key={index} className="border border-gray-300 rounded p-4 bg-white shadow-sm">
               <h2 className="text-xl font-bold text-black">{job.title}</h2>
               <p className="text-gray-700">{job.company}</p>
-              <div className="flex mt-2">
-                <button
-                  className="bg-blue-500 text-white py-1 px-3 rounded hover:bg-blue-600"
-                  onClick={() => handleJobClick(job)}
-                >
-                  View Details
-                </button>
-                <button
-                  className="bg-green-500 text-white py-1 px-3 rounded hover:bg-green-600 ml-2"
-                  onClick={() => handleViewFeedback(job.match_id)}
-                >
-                  View Feedback
-                </button>
-                <button
-                  className="bg-red-500 text-white py-1 px-3 rounded hover:bg-red-600 ml-2"
-                  onClick={() => handleWithdraw(job.match_id, index)}
-                >
-                  Withdraw
-                </button>
-              </div>
-              {selectedJob && selectedJob.match_id === job.match_id && (
-                <div className="mt-4 p-4 bg-gray-100 rounded-lg">
+              <p className={`text-${job.status === 'Rejected' ? 'red' : 'green'}-500 font-semibold`}>{job.status}</p>
+              <button
+                className="bg-blue-500 text-white py-1 px-3 rounded hover:bg-blue-600 mt-2"
+                onClick={() => handleJobClick(job)}
+              >
+                View Details
+              </button>
+              <button
+                className="bg-red-500 text-white py-1 px-3 rounded hover:bg-red-600 mt-2 ml-2"
+                onClick={() => handleWithdraw(job.match_id, index)}
+              >
+                Withdraw
+              </button>
+              {selectedJob?.match_id === job.match_id && (
+                <div className="mt-6 p-4 bg-gray-100 rounded-lg">
                   <h2 className="text-2xl font-bold text-gray-800 mb-4">Job Details</h2>
                   <p className="text-black"><strong>Title:</strong> {selectedJob.title}</p>
                   <p className="text-black"><strong>Company:</strong> {selectedJob.company}</p>
                   <p className="text-black"><strong>Status:</strong> {selectedJob.status}</p>
                   <p className="text-black"><strong>Description:</strong> {selectedJob.description}</p>
+                  <h3 className="text-xl font-semibold text-gray-700 mt-4">Feedback</h3>
+                  {feedback && feedback.length > 0 ? (
+                    feedback.map((fb) => (
+                      <div key={fb.feedback_id} className="border border-gray-300 rounded p-4 bg-white shadow-sm mb-4">
+                        <p className="text-black">{fb.feedback_text}</p>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-gray-500">No feedback found.</p>
+                  )}
                   <button
                     className="bg-gray-500 text-white py-2 px-4 rounded hover:bg-gray-600 mt-4"
                     onClick={() => setSelectedJob(null)}
                   >
                     Close
                   </button>
-                </div>
-              )}
-              {showFeedback === job.match_id && (
-                <div className="mt-4 p-4 bg-gray-200 rounded-lg">
-                  <h2 className="text-xl font-bold text-gray-800 mb-2">Feedback</h2>
-                  {feedback.length === 0 ? (
-                    <p className="text-gray-700">No feedback found.</p>
-                  ) : (
-                    feedback.map(fb => (
-                      <div key={fb.feedback_id} className="border border-gray-300 rounded p-3 mb-2 bg-white shadow-sm">
-                        <p className="text-black">{fb.feedback_text}</p>
-                      </div>
-                    ))
-                  )}
                 </div>
               )}
             </div>

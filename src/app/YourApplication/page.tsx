@@ -11,11 +11,19 @@ interface AppliedJob {
   description: string;
 }
 
+interface Feedback {
+  feedback_id: number;
+  match_id: number;
+  feedback_text: string;
+}
+
 const YourApplications: React.FC = () => {
   const [appliedJobs, setAppliedJobs] = useState<AppliedJob[]>([]);
-  const [expandedJobId, setExpandedJobId] = useState<number | null>(null);
+  const [selectedJob, setSelectedJob] = useState<null | AppliedJob>(null);
   const [filter, setFilter] = useState<string>('All');
-  
+  const [feedback, setFeedback] = useState<Feedback[]>([]);
+  const [showFeedback, setShowFeedback] = useState<number | null>(null);
+
   const { uid } = useAuth();
 
   useEffect(() => {
@@ -64,8 +72,27 @@ const YourApplications: React.FC = () => {
     }
   };
 
-  const handleJobClick = (match_id: number) => {
-    setExpandedJobId(expandedJobId === match_id ? null : match_id);
+  const handleJobClick = (job: AppliedJob) => {
+    setSelectedJob(job);
+    setShowFeedback(null);
+  };
+
+  const handleViewFeedback = async (match_id: number) => {
+    try {
+      const response = await fetch(`https://resumegraderapi.onrender.com/feedback/?match_id=${match_id}&all_feedback=false`);
+      const data = await response.json();
+      console.log('Feedback fetched:', data);
+
+      if (data.length === 0) {
+        setFeedback([]);
+      } else {
+        setFeedback(data);
+      }
+      
+      setShowFeedback(match_id);
+    } catch (error) {
+      console.error('Error fetching feedback:', error);
+    }
   };
 
   const filteredJobs = filter === 'All' ? appliedJobs : appliedJobs.filter(job => job.status === filter);
@@ -94,25 +121,57 @@ const YourApplications: React.FC = () => {
         </div>
         <div className="grid grid-cols-1 gap-4">
           {filteredJobs.map((job, index) => (
-            <div key={job.match_id} className="border border-gray-300 rounded p-4 bg-white shadow-sm">
+            <div key={index} className="border border-gray-300 rounded p-4 bg-white shadow-sm">
               <h2 className="text-xl font-bold text-black">{job.title}</h2>
               <p className="text-gray-700">{job.company}</p>
               <p className={`text-${job.status === 'Rejected' ? 'red' : 'green'}-500 font-semibold`}>{job.status}</p>
-              <button
-                className="bg-blue-500 text-white py-1 px-3 rounded hover:bg-blue-600 mt-2"
-                onClick={() => handleJobClick(job.match_id)}
-              >
-                {expandedJobId === job.match_id ? 'Hide Details' : 'View Details'}
-              </button>
-              <button
-                className="bg-red-500 text-white py-1 px-3 rounded hover:bg-red-600 mt-2 ml-2"
-                onClick={() => handleWithdraw(job.match_id, index)}
-              >
-                Withdraw
-              </button>
-              {expandedJobId === job.match_id && (
+              <div className="flex mt-2">
+                <button
+                  className="bg-blue-500 text-white py-1 px-3 rounded hover:bg-blue-600"
+                  onClick={() => handleJobClick(job)}
+                >
+                  View Details
+                </button>
+                <button
+                  className="bg-green-500 text-white py-1 px-3 rounded hover:bg-green-600 ml-2"
+                  onClick={() => handleViewFeedback(job.match_id)}
+                >
+                  View Feedback
+                </button>
+                <button
+                  className="bg-red-500 text-white py-1 px-3 rounded hover:bg-red-600 ml-2"
+                  onClick={() => handleWithdraw(job.match_id, index)}
+                >
+                  Withdraw
+                </button>
+              </div>
+              {selectedJob && selectedJob.match_id === job.match_id && (
                 <div className="mt-4 p-4 bg-gray-100 rounded-lg">
-                  <p className="text-black"><strong>Description:</strong> {job.description}</p>
+                  <h2 className="text-2xl font-bold text-gray-800 mb-4">Job Details</h2>
+                  <p className="text-black"><strong>Title:</strong> {selectedJob.title}</p>
+                  <p className="text-black"><strong>Company:</strong> {selectedJob.company}</p>
+                  <p className="text-black"><strong>Status:</strong> {selectedJob.status}</p>
+                  <p className="text-black"><strong>Description:</strong> {selectedJob.description}</p>
+                  <button
+                    className="bg-gray-500 text-white py-2 px-4 rounded hover:bg-gray-600 mt-4"
+                    onClick={() => setSelectedJob(null)}
+                  >
+                    Close
+                  </button>
+                </div>
+              )}
+              {showFeedback === job.match_id && (
+                <div className="mt-4 p-4 bg-gray-200 rounded-lg">
+                  <h2 className="text-xl font-bold text-gray-800 mb-2">Feedback</h2>
+                  {feedback.length === 0 ? (
+                    <p className="text-gray-700">No feedback found.</p>
+                  ) : (
+                    feedback.map(fb => (
+                      <div key={fb.feedback_id} className="border border-gray-300 rounded p-3 mb-2 bg-white shadow-sm">
+                        <p className="text-black">{fb.feedback_text}</p>
+                      </div>
+                    ))
+                  )}
                 </div>
               )}
             </div>

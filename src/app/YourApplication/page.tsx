@@ -13,7 +13,7 @@ interface AppliedJob {
 
 const YourApplications: React.FC = () => {
   const [appliedJobs, setAppliedJobs] = useState<AppliedJob[]>([]);
-  const [selectedJob, setSelectedJob] = useState<null | AppliedJob>(null);
+  const [expandedJobId, setExpandedJobId] = useState<number | null>(null);
   const [filter, setFilter] = useState<string>('All');
   
   const { uid } = useAuth();
@@ -64,8 +64,8 @@ const YourApplications: React.FC = () => {
     }
   };
 
-  const handleJobClick = (job: AppliedJob) => {
-    setSelectedJob(job);
+  const handleJobClick = (match_id: number) => {
+    setExpandedJobId(expandedJobId === match_id ? null : match_id);
   };
 
   const filteredJobs = filter === 'All' ? appliedJobs : appliedJobs.filter(job => job.status === filter);
@@ -94,15 +94,15 @@ const YourApplications: React.FC = () => {
         </div>
         <div className="grid grid-cols-1 gap-4">
           {filteredJobs.map((job, index) => (
-            <div key={index} className="border border-gray-300 rounded p-4 bg-white shadow-sm">
+            <div key={job.match_id} className="border border-gray-300 rounded p-4 bg-white shadow-sm">
               <h2 className="text-xl font-bold text-black">{job.title}</h2>
               <p className="text-gray-700">{job.company}</p>
               <p className={`text-${job.status === 'Rejected' ? 'red' : 'green'}-500 font-semibold`}>{job.status}</p>
               <button
                 className="bg-blue-500 text-white py-1 px-3 rounded hover:bg-blue-600 mt-2"
-                onClick={() => handleJobClick(job)}
+                onClick={() => handleJobClick(job.match_id)}
               >
-                View Details
+                {expandedJobId === job.match_id ? 'Hide Details' : 'View Details'}
               </button>
               <button
                 className="bg-red-500 text-white py-1 px-3 rounded hover:bg-red-600 mt-2 ml-2"
@@ -110,24 +110,14 @@ const YourApplications: React.FC = () => {
               >
                 Withdraw
               </button>
+              {expandedJobId === job.match_id && (
+                <div className="mt-4 p-4 bg-gray-100 rounded-lg">
+                  <p className="text-black"><strong>Description:</strong> {job.description}</p>
+                </div>
+              )}
             </div>
           ))}
         </div>
-        {selectedJob && (
-          <div className="mt-6 p-4 bg-gray-100 rounded-lg">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">Job Details</h2>
-            <p className="text-black"><strong>Title:</strong> {selectedJob.title}</p>
-            <p className="text-black"><strong>Company:</strong> {selectedJob.company}</p>
-            <p className="text-black"><strong>Status:</strong> {selectedJob.status}</p>
-            <p className="text-black"><strong>Description:</strong> {selectedJob.description}</p>
-            <button
-              className="bg-gray-500 text-white py-2 px-4 rounded hover:bg-gray-600 mt-4"
-              onClick={() => setSelectedJob(null)}
-            >
-              Close
-            </button>
-          </div>
-        )}
       </div>
     </main>
   );

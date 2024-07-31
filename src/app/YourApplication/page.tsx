@@ -124,7 +124,6 @@ const YourApplications: React.FC = () => {
             <div key={index} className="border border-gray-300 rounded p-4 bg-white shadow-sm">
               <h2 className="text-xl font-bold text-black">{job.title}</h2>
               <p className="text-gray-700">{job.company}</p>
-              <p className={`text-${job.status === 'Rejected' ? 'red' : 'green'}-500 font-semibold`}>{job.status}</p>
               <div className="flex mt-2">
                 <button
                   className="bg-blue-500 text-white py-1 px-3 rounded hover:bg-blue-600"

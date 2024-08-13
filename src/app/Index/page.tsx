@@ -14,7 +14,7 @@ const Home: React.FC = () => {
                         <p className="text-gray-700 text-lg mb-8">
                             At TalentMatch, we specialize in matching the right talent with the right opportunities.
                             Our clients trust us to provide top-notch talent for their needs.
-                            Whether you're a developer, designer, or marketer, we've got opportunities
+                            Whether you&apos;re a developer, designer, or marketer, we&apos;ve got opportunities
                             for you.
                         </p>
                         <Link href="/SignIn">

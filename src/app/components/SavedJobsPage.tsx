@@ -59,7 +59,7 @@ const SavedJobsPage: React.FC<SavedJobsPageProps> = ({
       window.alert('Job deleted successfully');
     } catch (error) {
       console.error('Error:', error);
-      window.alert(error.message || 'Error deleting job. Please try again later.');
+      window.alert((error as Error).message || 'Error deleting job. Please try again later.');
     }
   };
 

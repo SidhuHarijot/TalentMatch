@@ -73,7 +73,7 @@ const ApplicationPage: React.FC<ApplicationPageProps> = ({ job, goBack, navigate
 
     } catch (error) {
       console.error('Error applying for job:', error);
-      window.alert(`Error applying for job. Please try again later. ${error.message}`);
+      window.alert(`Error applying for job. Please try again later. ${(error as Error).message}`);
     }
   };
 

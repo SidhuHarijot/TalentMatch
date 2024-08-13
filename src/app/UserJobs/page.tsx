@@ -1,5 +1,6 @@
+"use client";
 import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
+import Link from 'next/link ';
 import JobCard from '../components/JobCard';
 import ApplicationPage from '../components/ApplicationPage';
 import SavedJobsPage from '../components/SavedJobsPage';

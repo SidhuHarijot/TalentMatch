@@ -208,7 +208,7 @@ const SignIn: React.FC = () => {
       const allUsers = await fetchAllUsers();
 
       // Check if the user exists in the database
-      const existingUser = allUsers.find(u => u.email === user.email);
+      const existingUser = allUsers.find((u: { email: string | null; }) => u.email === user.email);
 
       if (existingUser) {
         // User exists, proceed without form
@@ -248,7 +248,7 @@ const SignIn: React.FC = () => {
       const allUsers = await fetchAllUsers();
 
       // Check if the user exists in the database
-      const existingUser = allUsers.find(u => u.email === user.email);
+      const existingUser = allUsers.find((u: { email: string | null; }) => u.email === user.email);
 
       if (existingUser) {
         // User exists, no need for additional form
@@ -350,7 +350,7 @@ const SignIn: React.FC = () => {
   const minDate = "1909-01-01";
 
 
-  const isPhoneNumberValid = (phone) => {
+  const isPhoneNumberValid = (phone: string) => {
     const phoneRegex = /^[0-9]{2}-[0-9]{10}$/;
     return phoneRegex.test(phone);
   };
